@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Esri dot on the map</title>
+    <style>
+        #viewDiv{width:400px; height:400px;}
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.7/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.7/"></script>
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/Graphic"
+        ], function(Map, MapView,Graphic) {
+            var map = new Map({
+                basemap: "topo"
+            });
+            // Get your x and y coordinates at http://www.arcgis.com/home/webmap/viewer.html
+            var x = 6.091984; //lon(gitude)
+            var y = 52.502819; //lat(itude)
+            var view = new MapView({
+                container: "viewDiv", // Reference to the div 
+                map: map, // Reference to the map object created before the mapview
+                zoom: 16, // Sets zoom level 
+                center: [x, y] // Sets center point of view using longitude,latitude
+            });
+         
+            // Create your own symbols in the Esri symbol playground: https://developers.arcgis.com/javascript/latest/sample-code/playground/live/index.html
+            var point = new Graphic({
+                geometry: {type:"point",x:x,y:y},
+                symbol: {
+                          type: "simple-marker",
+                          outline: {
+                              width: 3,
+                              color: [255, 99, 0, 1]
+                          },
+                          size: 20,
+                          color: [255, 255, 255, 0.5] 
+                        }
+               
+                    });
+            view.graphics.add(point);
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>

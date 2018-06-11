@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Esri dot on the map</title>
+    <style>
+        #viewDiv{width:400px; height:400px;}
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.7/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.7/"></script>
+    <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/request",
+      "dojo/domReady!"
+    ], function(
+      Map,
+      MapView,
+      Graphic,
+      esriRequest
+    ) {
+      // Set the address of the location you want to show on the map 
+      var address = 'Koggelaan 33, 8017 JN, Zwolle'
+
+      // Create the Map
+      var map = new Map({
+        basemap: "topo"
+      });
+
+      // Create the MapView
+      var view = new MapView({
+        container: "viewDiv", // Reference to the div 
+        map: map, // Reference to the map object created before the scene
+        zoom: 18 // Sets zoom level based on level of detail (LOD)
+      });
+        
+      // When the view is loaded, execute the query to get the location of the address 
+      view.when(function() {
+        esriRequest("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates", {
+          query: {
+            f: 'json',
+            singleLine: address,
+            outFields: 'Match_addr'
+          },
+          responseType: 'json'
+        }).then(function(response) {
+          // Get the location of the first address returned
+          foundX = response.data.candidates[0].location.x;
+          foundY = response.data.candidates[0].location.y;
+          
+          // Create a new graphic to place on the map
+          var pointGraphic = new Graphic({
+            // Add the found geometry to the graphic
+            geometry: { type: "point", x: foundX, y: foundY },
+            // Create a symbol for the graphic
+            // Create your own symbols in the Esri symbol playground: https://developers.arcgis.com/javascript/latest/sample-code/playground/live/index.html
+            symbol: {
+              type: "simple-marker",
+                          outline: {
+                              width: 3,
+                              color: [255, 99, 0, 1]
+                          },
+                          size: 20,
+                          color: [255, 255, 255, 0.5]
+            }
+          });
+
+          // Place the graphic on the map
+		      view.graphics.add(pointGraphic);
+          // Center the map to the location of the graphic
+          view.goTo(pointGraphic);
+          
+        });
+      });
+      
+    });
+  </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>
