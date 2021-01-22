@@ -1,13 +1,17 @@
 # mapexamples
 
-This repository shows example maps you can use.
-
-A simple map with only a dot on the map:
+This repository shows cool example maps you can use.
 
 ![Simple map](images/simple_map.png)
+A set of Basic examples can be found here:
+[CoolMaps/basics](https://github.com/esrinederland/CoolMaps/Basics)
 
-This can be done with the 
-[simple map sample](https://github.com/esrinederland/mapexamples/blob/master/simple_map.html) or the [simple map with adress sample](https://github.com/esrinederland/mapexamples/blob/master/simple_map_with_address.html)
+<hr>
+
+![PopupOnHover](images/Screenshot_Hover.jpg)
+A cool map with a popup on hover can be found here: 
+[CoolMaps/PopupOnHover](https://github.com/esrinederland/CoolMaps/PopupOnHover)
+
 
 For more info see:
 https://js.arcgis.com
