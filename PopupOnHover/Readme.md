@@ -5,4 +5,4 @@ This example shows how to make the popup apear on hover instead of de default cl
 Also shows the 'selected' feature. 
 <br>
 View this example live:
-https://esrinederland.github.io/CoolMaps/PopupOnHover/popuponhover.html
+[here](https://esrinederland.github.io/CoolMaps/PopupOnHover/popuponhover.html)
