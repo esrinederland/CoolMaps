@@ -1,0 +1,162 @@
+<!doctype html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Popup on hover</title>
+    <link rel="shortcut icon" href="/img/favicon.ico">
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
+    <style>
+      html,body
+      {
+        height:100%;
+
+      }
+      #header, .footer
+      {
+        height:60px;
+        padding:10px 0px 0px 15px;
+
+
+      }
+      #bodywrapper
+      {
+        display:block;
+        height: 100%;
+      }
+      
+      #mapDiv{
+        height:100%;
+
+      }
+
+    </style>
+    <script src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/4.18/"></script>
+    <script>
+       require([
+        "esri/core/watchUtils",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/layers/GraphicsLayer",
+        "dojo/domReady!"
+      ], function(
+        watchUtils,
+        Map,
+        MapView,
+        FeatureLayer,
+        GraphicsLayer
+        
+      ) {
+
+        var map = new Map({
+          basemap: "dark-gray"
+        });
+
+        var view = new MapView({
+          container: "mapDiv",
+          map: map,
+          center: { x: 6.1, y: 52.5, spatialReference: 4326 },
+          zoom: 8
+        });
+
+        var layer = new FeatureLayer({
+          url:
+            "https://services.arcgis.com/emS4w7iyWEQiulAb/arcgis/rest/services/PC4_WM/FeatureServer/0",
+          outFields: ["*"]
+        });
+
+        // hovered area feature will be added to this layer
+        const graphicsLayer = new GraphicsLayer({
+          title: "layer"
+        });
+
+        map.add(graphicsLayer);
+        map.add(layer);
+
+        view.ui.add(document.getElementById("sidepanel"), "top-right");
+        function highlightFeature( lview,mappoint) {
+
+          //create a query to get the area feature
+          const query = {
+                  geometry: mappoint,
+                  returnGeometry: true,
+                  outFields: ["*"]
+                };
+          //query the layerview (that holds all the data on the client)
+          lview.queryFeatures(query).then((response)=>{
+              //console.log(response);
+              //clear the graphics layer
+              graphicsLayer.graphics.removeAll();
+
+              if(response.features.length > 0)
+              {
+                //console.log("a feature");
+                const symbol = {
+                  type: "simple-fill",
+                  color: "rgba(0, 255, 255, 1)",
+                  outline: null
+                };
+                //
+                var feature = response.features[0];
+                //give the graphic a symbol (other than the one it gets from the renderer of the FeatureLayer)
+                feature.symbol = symbol;
+                graphicsLayer.graphics.add(feature);
+                //defint a popuTemplate on the feature so the popup is shown (a graphicslayer does not have a default popuptemplate)
+                feature.popupTemplate = {content:"This is postalcode {PC4}<br />Number of adreslocations: {Aantal_adreslocaties}"}
+                //open the popup on the location the mouse is hovering
+                view.popup.open({
+                            features:response.features,
+                            location:mappoint
+                        });
+
+              }
+              
+          });
+        }
+
+        //when the view is completely loaded
+        view.when(function() {
+          //console.log("view when");
+          //when the layer is loaded and a layerview is created
+          view.whenLayerView(layer).then(function(lview) {
+            //console.log("view whenLayerView");
+            //when the layerview is done updating for the first time
+            watchUtils.whenFalseOnce(lview, "updating", function() {
+              console.log("whenFalseOnce hooking event");
+              //hook the event
+              view.on("pointer-move", function(evt) {
+              
+                highlightFeature(lview,view.toMap(evt));
+              });
+            });
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+   
+      <!-- header -->
+        <div id="header" class="panel-black"><h2>Popup on hover</h2></div>
+
+      <!-- content of page -->
+      <div id="bodywrapper"> 
+        <div id="sidepanel" class="panel panel-white">Hover over a polygon to show its popup</div>
+        <div id="mapDiv"></div>
+        
+       
+      </div>
+    </div>
+    <div class="footer" role="contentinfo" class="panel-black">
+      <!-- content of footer --><div class="esri-logo"></div>
+  </div>
+    <!-- interactive patterns need to be initialized -->
+    <script>
+       calcite.init()
+    </script>
+  </body>
+</html>
