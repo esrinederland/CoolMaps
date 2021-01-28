@@ -9,4 +9,4 @@ In this sample we have two identical applications, that each use a specific API 
 <br>
 <br>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/ApiKeysFroRouting/index.html)
+[here](https://esrinederland.github.io/CoolMaps/ApiKeysForRouting/index.html)
