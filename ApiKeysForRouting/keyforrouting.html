@@ -1,0 +1,178 @@
+<html>
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+ <title>ArcGIS API for JavaScript Tutorials: Find a route and directions</title>
+ <style>
+  html, body, #viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+  }
+  #info {
+	position: absolute; 
+	left: 70px; 
+	top: 14px; 
+	height: 18px;
+	padding: 7px;
+	background: white; 
+	border: 1px solid #d3d3d3; 
+	font-family: Arial, Helvetica, sans-serif; 
+	font-size: 15px;
+  }
+ </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.18/"></script>
+
+  <script>
+
+    require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/tasks/RouteTask",
+      "esri/tasks/support/RouteParameters",
+      "esri/tasks/support/FeatureSet"
+
+    ], function(esriConfig, Map, MapView, Graphic, RouteTask, RouteParameters, FeatureSet) {
+
+    esriConfig.apiKey = "AAPKb0ba4eb60a3241e2b642645bee3624e22_X5UxW4yOtw6imudCKSvUw09ceiSxHrSW1PFUg0w44PyTHo2BKJj9hEzKLvm7Kf";
+
+    const map = new Map({
+      basemap: "arcgis-navigation" //Basemap layer service
+    });
+
+    const view = new MapView({
+      container: "viewDiv",
+      map: map,
+      center: [6.1, 52.5], //Longitude, latitude
+      zoom: 13
+    });
+
+    const routeTask = new RouteTask({
+        url: "https://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World"
+    });
+
+    view.on("click", function(event){
+
+      if (view.graphics.length === 0) {
+        addGraphic("origin", event.mapPoint);
+      } else if (view.graphics.length === 1) {
+        addGraphic("destination", event.mapPoint);
+
+        getRoute(); // Call the route service
+
+      } else {
+        view.graphics.removeAll();
+        addGraphic("origin",event.mapPoint);
+      }
+
+    });
+
+    function addGraphic(type, point) {
+      const graphic = new Graphic({
+        symbol: {
+          type: "simple-marker",
+          color: (type === "origin") ? "white" : "black",
+          size: "8px"
+        },
+      geometry: point
+    });
+      view.graphics.add(graphic);
+    }
+
+    const travelModeObject = {
+      "distanceAttributeName": "Kilometers",
+      "description": "Follows paths and roads that allow pedestrian traffic and finds solutions that optimize travel distance.",
+      "impedanceAttributeName": "Kilometers",
+      "simplificationToleranceUnits": "esriMeters",
+      "uturnAtJunctions": "esriNFSBAllowBacktrack",
+      "useHierarchy": false,
+      "name": "Walking Distance",
+      "simplificationTolerance": 2,
+      "timeAttributeName": "WalkTime",
+      "restrictionAttributeNames": ["Avoid Private Roads", "Avoid Roads Unsuitable for Pedestrians", "Preferred for Pedestrians", "Walking"],
+      "type": "WALK",
+      "id": "yFuMFwIYblqKEefX",
+      "attributeParameterValues": [{
+        "parameterName": "Restriction Usage",
+        "attributeName": "Avoid Private Roads",
+        "value": "AVOID_MEDIUM"
+      }, {
+        "parameterName": "Restriction Usage",
+        "attributeName": "Walking",
+        "value": "PROHIBITED"
+      }, {
+        "parameterName": "Restriction Usage",
+        "attributeName": "Preferred for Pedestrians",
+        "value": "PREFER_LOW"
+      }, {
+        "parameterName": "Walking Speed (km/h)",
+        "attributeName": "WalkTime",
+        "value": 5
+      }, {
+        "parameterName": "Restriction Usage",
+        "attributeName": "Avoid Roads Unsuitable for Pedestrians",
+        "value": "AVOID_HIGH"
+      }]
+    };
+
+    function getRoute() {
+      const routeParams = new RouteParameters({
+        stops: new FeatureSet({
+          features: view.graphics.toArray()
+        }),
+
+        returnDirections: true,
+        travelMode: travelModeObject
+      });
+
+      routeTask.solve(routeParams)
+        .then(function(data) {
+          data.routeResults.forEach(function(result) {
+            result.route.symbol = {
+              type: "simple-line",
+              color: [5, 150, 255],
+              width: 3
+            };
+            view.graphics.add(result.route);
+          });
+
+          // Display directions
+         if (data.routeResults.length > 0) {
+           const directions = document.createElement("ol");
+          directions.classList = "esri-widget esri-widget--panel esri-directions__scroller";
+          directions.style.marginTop = "0";
+          directions.style.padding = "15px 15px 15px 30px";
+          const features = data.routeResults[0].directions.features;
+
+          // Show each direction
+          features.forEach(function(result,i){
+            const direction = document.createElement("li");
+            direction.innerHTML = result.attributes.text + " (" + result.attributes.length.toFixed(2) + " miles)";
+            directions.appendChild(direction);
+          });
+
+          view.ui.empty("top-right");
+          view.ui.add(directions, "top-right");
+         }
+
+        })
+
+        .catch(function(error){
+            console.log(error);
+        })
+
+    }
+
+  });
+  </script>
+
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+	<div id="info">Routing en basemap</div>
+  </body>
+</html>
