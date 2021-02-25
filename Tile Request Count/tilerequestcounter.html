@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ArcGIS Platform Tile Request Counter</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #tileCountDiv {
+        position: absolute;
+        top: 80px;
+        right: 14px;
+        width: 280px;
+        background: white;
+        border: 1px solid #d3d3d3;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 20px;
+        padding: 9px;
+      }
+      #header {
+        height: 60px;
+        padding: 10px 0px 0px 15px;
+      }
+    </style>
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.18/"></script>
+
+    <script>
+      require(["esri/config", "esri/Map", "esri/views/MapView", "dojo/on"], function (esriConfig, Map, MapView, on) {
+
+        esriConfig.apiKey = "AAPKc8dc666e7c0b46cdad5b89789cba0d06LFiQdWVV3f-sW8gP1d_uWXJ65fJTRhZooEOnSf25Ka7thWqkn8K-oPrtgG2QdHCa";
+
+        const map = new Map({
+          basemap: "arcgis-topographic" // Basemap layer service
+        });
+
+        const view = new MapView({
+          map: map,
+          center: [6.1, 52.5], // Longitude, latitude
+          zoom: 13, // Zoom level
+          container: "viewDiv" // Div element
+        });
+        
+        let tileCount = 0;
+        
+        var toggleDiv = document.createElement("div");
+        toggleDiv.setAttribute("id", "toggleDiv");
+        toggleDiv.setAttribute("class", "esri-widget--button esri-widget esri-interactive");
+        toggleDiv.setAttribute("role", "button");
+        tdButton.setAttribute("title", "Reset Counter");
+        var tdButton = document.createElement("span");
+        tdButton.setAttribute("id", "tdButton");
+        tdButton.setAttribute("class", "esri-icon esri-icon-rotate-back");
+        on(tdButton, "click", function(){
+          tileCount = 0;
+          document.getElementById("tileCountDiv").innerHTML = "Free up to 2.000.000 requests<br>" + tileCount + " tile requests";
+        });
+        toggleDiv.appendChild(tdButton);
+        view.ui.add(toggleDiv, "top-left");
+
+      
+      
+      esriConfig.request.interceptors.push({
+          // set the `urls` property to the URL of the World_Basemap_v2 VectorTileServer so that this
+          // interceptor only applies to requests made to the FeatureLayer URL
+          urls: "https://basemaps-api.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer/tile/",
+          // use the BeforeInterceptorCallback 
+          before: function(params) {
+
+          },
+          // use the AfterInterceptorCallback to count the number of tile requests
+          after: function(response) {
+            tileCount++;
+            document.getElementById("tileCountDiv").innerHTML = "Free up to 2.000.000 requests<br>" + tileCount + " tile requests";
+          }
+        });
+        
+              });
+    </script>
+
+  </head>
+  <body>
+    <div id="header" class="panel-dark-blue"><h2>ArcGIS Platform Tile Request Counter</h2></div>
+    <div id="viewDiv"></div>
+    <div>
+       <div class="esri-logo"></div>
+    </div>
+    <div id="tileCountDiv"><div>
+  </body>
+</html>
