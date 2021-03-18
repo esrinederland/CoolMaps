@@ -1,4 +1,4 @@
-# Custom basemap
+# Custom Styled Vector Basemap
 
 This sample app shows the use of a Custom Styled Vector Basemap.
 ![Custom Styled Vector Basemap app](../images/customstyledbasemap.png)
