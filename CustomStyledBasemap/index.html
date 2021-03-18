@@ -1,0 +1,73 @@
+<!--
+
+To run this demo, you need to replace the API key with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-location-services/get-started/
+
+ -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>ArcGIS Platform: Add a styled basemap layer</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.18/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.18/"></script>
+    <script>
+      require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+
+        "esri/Basemap",
+        "esri/layers/VectorTileLayer",
+      ], function (esriConfig, Map, MapView, Basemap, VectorTileLayer) {
+        esriConfig.apiKey =
+          "AAPK1c3b462fe7fa42a4bf3d3de41e33caebxDr6MJXaTxXNDlc-WBXhtyMpAMod2k0Rb8V2GIkVRRARWfTiawHwdWjTvN6AFmfz";
+
+        const vectorTileLayer = new VectorTileLayer({
+          portalItem: {
+            id: "2dfeaa08d9c4437da79bbeca8e852e41", // Custom Styled Vector Basemap item id
+          },
+          opacity: 0.75,
+        });
+
+        const basemap = new Basemap({
+          baseLayers: [vectorTileLayer],
+        });
+
+        const map = new Map({
+          basemap: basemap,
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+
+          center: [5.5, 52],
+          zoom: 7,
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
