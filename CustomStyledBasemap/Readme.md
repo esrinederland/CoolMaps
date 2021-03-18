@@ -7,7 +7,7 @@ This sample app shows the use of a Custom Styled Vector Basemap.
 So how do you create and use a styled vector basemap?
 <br>
 First you create a custom styled vector basemap using the MapStyler or by hand (https://www.youtube.com/watch?v=IY8TmN607b4&ab_channel=EsriEvents).
-![Create a styled vector basemap using the MapStyler](images/savemap.png)
+![Create a styled vector basemap using the MapStyler](images/save_map.png)
 <br>
 <br>
 When you save the map using the MapStyler app you're prompted to sign in. Use your ArcGIS Platform Essentials account for this! The custom styled basemap will now be saved there.
