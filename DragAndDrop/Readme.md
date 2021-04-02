@@ -7,4 +7,4 @@ This sample shows how you can make drag and drop fuctionality with graphics on t
 <br>
 <br>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/DragAndDrop/DragAndDrop.html)
+[here](https://esrinederland.github.io/CoolMaps/DragAndDrop/index.html)
