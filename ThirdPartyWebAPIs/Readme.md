@@ -24,13 +24,13 @@ The first sample app shows using public content provided by Esri Netherlands. In
 <br>
 ![Mapbox using ArcGIS Esri Netherlands content](../images/mapbox_content.png)
 <br>
-View the example using public content live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/mapbox_esrinl_content.html)
+View the Mapbox example using public content live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/mapbox_esrinl_content.html)
 <br><br>
 The second sample is identical to the first, but this one uses secured content stored with the developer account. By doing this, it becomes possible to use the secured data with an API key instead of an ArcGIS Identity. Unauthorized users will not be able to access that content other then through an API key. Because this key is visible in your JavaScript code, you still need to make sure yourself that unauthorized users will not be able to access the web page containing the map, by using your own authentication and authorization mechanism.
 <br>
 ![Mapbox using ArcGIS Esri Netherlands content](../images/mapbox_private_data.png)
 <br>
-View the example using private data live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/mapbox_private_data.html)
+View the Mapbox example using private data live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/mapbox_private_data.html)
 <br><br>
 To see how the API key can be used as a token to access a secured service, try these links:
 <br>
