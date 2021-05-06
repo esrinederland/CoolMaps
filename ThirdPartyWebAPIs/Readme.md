@@ -18,6 +18,12 @@ View the example using OpenLayers live: [here](https://esrinederland.github.io/C
 <br>
 View the example using Mapbox live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/mapbox.html)
 <br><br>
+The next sample app shows using Leaflet as web mapping API, while being able to switch between different Esri basemaps.
+<br>
+![Mapbox using ArcGIS Esri Netherlands content](../images/leaflet_basemaps.png)
+<br>
+View the Leaflet example containing a basemap switcher live: [here](https://esrinederland.github.io/CoolMaps/ThirdPartyWebAPIs/leaflet_basemaps.html)
+<br><br>
 The next 2 applications use Mapbox as web mapping API, but besides using the Esri basemap they also show data stored in Hosted FeatureServices.
 <br>
 The first sample app shows using public content provided by Esri Netherlands. In this case it's a layer containing Rijksmonumenten (monumental buildings), filtered by windmills. The app uses Mapbox clustering and popups to tidy up and provide extra value to the data shown on the map. When you click on a single windmill, a popup will show with a link to an external website containg information on these monumental windmills.
