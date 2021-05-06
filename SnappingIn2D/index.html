@@ -1,0 +1,136 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>CoolMap: Snapping in 2D</title>
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet"
+        href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+    <style>
+        html,
+        body {
+            height: 100%;
+
+        }
+
+        #header {
+            height: 60px;
+            padding: 10px 0px 0px 15px;
+
+
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        #mapDiv {
+            height: 100%;
+
+        }
+
+        .footer {
+            padding-top: 10px;
+        }
+    </style>
+    <script
+        src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/4.19/"></script>
+    <script>
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/layers/GraphicsLayer",
+            "esri/widgets/Sketch"
+        ], function (WebMap, MapView, FeatureLayer, GraphicsLayer, Sketch) {
+
+
+            var map = new WebMap({
+                portalItem: {
+                    // autocasts as new PortalItem()
+                    id: "de19ff6ab2014d21a76ff7faed389594"
+                }
+            });
+            var gLayer = new GraphicsLayer();
+            map.layers.add(gLayer);
+
+
+            var view = new MapView({
+                container: "mapDiv",
+                map: map
+
+            });
+
+            view.when(() => {
+
+                //get the layer by the title in the webmap
+                var fLayer = view.map.layers.find((x) => x.title == "Bag_Pand_Zwolle");
+
+                // Create a new instance of sketch widget and set
+                // its required parameters
+                var sketch = new Sketch({
+                    layer: gLayer,
+                    view: view,
+                    availableCreateTools: ["polygon", "rectangle", "circle"],
+                    creationMode: "update",
+                    snappingOptions: { // autocasts to SnappingOptions()
+                        enabled: true,
+                        featureEnabled: true,
+                        featureSources: [{ layer: gLayer }, { layer: fLayer }] // autocasts to FeatureSnappingLayerSource()
+                    }
+                });
+                sketch.on("create", (evt) => {
+                    //give graphic a new color
+                    if (evt.graphic) {
+                        evt.graphic.symbol = {
+                            type: "simple-fill",  // autocasts as new SimpleFillSymbol()
+                            color: [128, 128, 128, 0.5],
+                            outline: {  // autocasts as new SimpleLineSymbol()
+                                color: "red",
+                                width: "3px"
+                            }
+                        };
+                    }
+                })
+
+                view.ui.add(sketch, "top-right");
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+    <!-- header -->
+    <div id="header" class="panel-dark-blue">
+        <h2>Snapping in 2D</h2>
+    </div>
+
+    <!-- content of page -->
+    <div id="bodywrapper">
+
+        <div id="mapDiv"></div>
+
+
+    </div>
+    </div>
+    <div class="footer" role="contentinfo">
+        <!-- content of footer -->
+        <div class="esri-logo"></div>
+    </div>
+
+    <!-- get calcite-web js from the cdn (use latest version) -->
+
+
+    <!-- interactive patterns need to be initialized -->
+    <script>
+        calcite.init()
+    </script>
+</body>
+
+</html>
