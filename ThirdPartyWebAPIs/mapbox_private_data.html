@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+    <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/@esri/arcgis-rest-request@3.0.0/dist/umd/request.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-auth@3.0.0/dist/umd/auth.umd.js"></script>
+    <script src="https://unpkg.com/@esri/arcgis-rest-feature-layer@3.0.0/dist/umd/feature-layer.umd.js"></script>
+    <style>
+      html,
+      body,
+      #map {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        color: #323232;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+
+    <script>
+      const apiKey = "AAPKae3dab1f05f948b69237b3469b47aa40ccRlxQCH8occ_IBIyNrAhGtY9NaONVg54soZcUqSolmTHii1ZAZ8YFr6Dmf1AcHW";
+      const basemapEnum = "ArcGIS:Topographic";
+      const map = new mapboxgl.Map({
+        container: "map", // the id of the div element
+        style: `https://basemaps-api.arcgis.com/arcgis/rest/services/styles/${basemapEnum}?type=style&token=${apiKey}`,
+        zoom: 7, // starting zoom
+        center: [5.4, 52.3] // starting location [longitude, latitude]
+      });
+
+      map.once("load", () => {
+        // This code runs once the base style has finished loading.
+
+        map.addSource("gemalen", {
+          type: "geojson",
+          data: `https://services6.arcgis.com/PJ2O5BaHcA2bnIXr/ArcGIS/rest/services/NonPublicPointLayer/FeatureServer/0/query?f=pgeojson&where=1=1&token=${apiKey}`,
+          cluster: true,
+          clusterRadius: 20, // cluster two points if less than 20 pixels apart
+          clusterMaxZoom: 14 // display all points individually from zoom 14 up
+
+        });
+
+        map.addLayer({
+          id: "gemalen",
+          type: "circle",
+          source: "gemalen",
+
+          paint: {
+            "circle-color": "rgb(65,35,120)",
+            "circle-stroke-width": 3.5,
+            "circle-stroke-color": "white",
+
+            "circle-radius": ["case", ["get", "cluster"], 12, 6] // 10 pixels for clusters, 5 pixels otherwise
+
+          }
+        });
+
+        map.addLayer({
+          id: "gemalen-cluster",
+          type: "symbol",
+          source: "gemalen",
+          layout: {
+            "text-font": ["Arial Bold"],
+            "text-field": ["get", "point_count"],
+            "text-offset": [0, 0.1] // move the label vertically downwards slightly to improve centering
+          },
+          paint: {
+            "text-color": "white"
+          }
+        });
+        
+        // When a click event occurs on a feature in the gemalen layer, open a popup at the
+        // location of the feature, with description HTML from its properties.
+        map.on('click', 'gemalen', function (e) {
+          console.log(e.features[0]);
+        var coordinates = e.features[0].geometry.coordinates.slice();
+        var description = "<a href='https://www.monumenten.nl/monument/" + e.features[0].properties.RIJKSMONNR + "' target='_blank'>Monument " + e.features[0].properties.RIJKSMONNR + "</a>'";
+
+        // Ensure that if the map is zoomed out such that multiple
+        // copies of the feature are visible, the popup appears
+        // over the copy being pointed to.
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+        // Only display the popup if the circle isn't a cluster
+        if(e.features[0].properties.RIJKSMONNR) {
+          new mapboxgl.Popup()
+        .setLngLat(coordinates)
+        .setHTML(description)
+        .addTo(map);
+        }
+        });
+
+        // Change the cursor to a pointer when the mouse is over the places layer.
+        map.on('mouseenter', 'gemalen', function () {
+        map.getCanvas().style.cursor = 'pointer';
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on('mouseleave', 'gemalen', function () {
+        map.getCanvas().style.cursor = '';
+        });
+
+      });
+
+    </script>
+
+  </body>
+</html>

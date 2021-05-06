@@ -1,0 +1,58 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Mapbox GL JS using ArcGIS Platform</title>
+    <style>
+     body { margin:0; padding:0; }
+      #standardMap {
+        position: absolute;
+        top:0;
+        bottom:50%;
+        right:0;
+        left:0;
+      }
+      #esriMap {
+        position: absolute;
+        top:50%;
+        bottom:0;
+        right:0;
+        left:0;
+      }
+    </style>
+
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+    <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+
+  </head>
+
+  <body>
+    <div id="standardMap"></div>
+    <div id="esriMap"></div>
+
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoiamFndG1hbnMiLCJhIjoiY2tsYXR3Z2RqMTFjOTJvbjBqa25veHJqYiJ9.toZiIz-Jc7l5hiAePgy2ng';
+      var sMap = new mapboxgl.Map({
+      container: 'standardMap', // container id
+      style: 'mapbox://styles/mapbox/streets-v11', // style URL
+      center: [6.1, 52.5], // starting position [lng, lat]
+      zoom: 13 // starting zoom
+      });
+    </script>
+    <script>
+
+      const apiKey = "AAPKae3dab1f05f948b69237b3469b47aa40ccRlxQCH8occ_IBIyNrAhGtY9NaONVg54soZcUqSolmTHii1ZAZ8YFr6Dmf1AcHW";
+      const basemapEnum = "ArcGIS:LightGray";
+
+      const eMap = new mapboxgl.Map({
+        container: "esriMap", // the id of the div element
+        style: `https://basemaps-api.arcgis.com/arcgis/rest/services/styles/${basemapEnum}?type=style&apiKey=${apiKey}`,
+        zoom: 13, // starting zoom
+        center: [6.1, 52.5] // starting location [longitude, latitude]
+      });
+
+    </script>
+
+  </body>
+
+</html>
