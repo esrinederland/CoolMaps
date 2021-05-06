@@ -1,4 +1,4 @@
-# Use Esri Basemaps and data with tird party web APIs
+# Use Esri Basemaps and data with third party web APIs
 Since the release of ArcGIS Platform, Esri supports the use of API keys for accessing basemaps, geocoding and routing services and in the near future even your own secured services. On top of that it's also possible to use the Location Based Services in other (open source) front ends than the ones built with our own JavaScript API.
 <br>
 The API keys you create with your developer account can be set to support various operations. They always support the use of basemaps, but on top of that you can choose which capability to enable with each specific API key. Furthermore you can define a referer so the key can only be used from a spcific URL.
