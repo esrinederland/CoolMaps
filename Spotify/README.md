@@ -14,4 +14,6 @@ All sessions have been published to YouTube:
 
 [ArcGIS Experience Builder - bouw uw eigen widgets](https://www.youtube.com/watch?v=QWbcj06c70o&t=1263s)
 
-![Spotify Map](images/spotify.png)
+<hr>
+
+![Spotify Map](../images/spotify.png)
