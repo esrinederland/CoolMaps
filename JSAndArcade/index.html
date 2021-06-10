@@ -1,0 +1,196 @@
+<!doctype html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>JS And Arcade</title>
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet" href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+    <style>
+      html,body
+      {
+        height:100%;
+      }
+      #header
+      {
+        height:60px;
+        padding:10px 0px 0px 15px;
+        background-color: #F28D3F;
+        border:1px solid #613007;
+        color:black;
+      }
+      #bodywrapper
+      {
+        display:block;
+        height: 100%;
+      }
+      
+      #mapDiv{
+        height:100%;
+      }
+      .footer
+      {
+        padding-top: 10px;
+      }
+
+    </style>
+    <script src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/4.19/"></script>
+    <script>
+      require(["esri/views/MapView", "esri/WebMap","esri/renderers/Renderer","esri/renderers/support/jsonUtils"], function(MapView, WebMap,Renderer,rendererJsonUtils) {
+
+        
+
+        /************************************************************
+         * Creates a new WebMap instance. A WebMap must reference
+         * a PortalItem ID that represents a WebMap saved to
+         * arcgis.com or an on-premise portal.
+         *
+         * To load a WebMap from an on-premise portal, set the portal
+         * url with esriConfig.portalUrl.
+         ************************************************************/
+        var webmap = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem() 
+            id: "9e6a6756368b44a1ad03869f9019795c"
+          }
+        }); 
+                
+        /************************************************************
+         * Set the WebMap instance to the map property in a MapView.
+         ************************************************************/
+        var view = new MapView({
+          map: webmap,
+          container: "mapDiv"
+        });
+        //add the side panel to the mapview
+        view.ui.add(document.getElementById("sidepanel"), "top-right");
+
+        //wait for the view is loaded
+        view.when(()=>{
+          //find the layer in de view
+          var fl = view.map.layers.find((x)=>x.title=="Postcodevlakken PC 4");
+          //console.log(fl)
+          //wait for the layerview 
+          view.whenLayerView(fl).then(function(layerView){
+            //watch the updating property so we can set the status 
+            layerView.watch("updating", function(value){
+            console.log("updatestatus: ",value);
+            updateStatusText(value);
+            });
+          });
+        
+        });
+
+        //get the view click event
+        view.on("click", (evt)=> {
+          //console.log("click",evt);
+          //find the layer in the webmap
+          var fl = view.map.layers.find((x)=>x.title=="Postcodevlakken PC 4");
+
+          //clone the rendere (because the renderer should be set to a new object to trigger a 'redraw')
+          var rend = fl.renderer.clone();
+
+          //create a new arcade expression string
+          //var newExpression = `var geom = Geometry({"x":${evt.mapPoint.x},"y":${evt.mapPoint.y}});\r\n`
+          //var newExpression = `var geom = Geometry({"x":${Math.round(evt.mapPoint.x)},"y":${Math.round(evt.mapPoint.y)},"spatialReference":{"wkid":102100}});\r\n`
+          var newExpression = `var input = {"x":${Math.round(evt.mapPoint.x)},\r\n`
+          newExpression += `            "y":${Math.round(evt.mapPoint.y)},\r\n`
+          newExpression += '            "spatialReference":{"wkid":102100}}\r\n'
+          newExpression += 'var geom = Geometry(input);\r\n';
+          newExpression += 'return Distance($feature,geom);';
+
+          //set the expression on the visualvariable that the layer is rendered on
+          rend.visualVariables[0].valueExpression = newExpression;
+          fl.renderer = rend;
+
+          //Query the postalcode 
+          updatePostalCode(evt.mapPoint)
+
+          updateArcadeBlock(newExpression);
+          
+
+        });
+
+        //function to set the status text
+        function updateStatusText(isUpdating)
+        {
+          var updatestatus = document.getElementById("updatestatus");
+          if(isUpdating)
+          {
+            updatestatus.innerHTML = "updating" 
+          }
+          else
+          {
+            updatestatus.innerHTML = "complete" 
+          }
+        }
+
+        //function to query for a postalcode, set it in the panel and return it.
+        function updatePostalCode(mapPoint)
+        {
+          //get the html element 
+          var pcspan = document.getElementById("postalcode");
+          //find the layer in the map
+          var fl = view.map.layers.find((x)=>x.title=="Postcodevlakken PC 4");
+          //create a query for the layer
+          var q = fl.createQuery();
+          //set the mappoint as geometry
+          q.geometry = mapPoint;
+          
+          return fl.queryFeatures(q).then((results)=>{
+            
+            //console.log("queryResponse",results);
+            //when the response is there, set it to unknown or the pc4 that is found.
+            var pc4 = "unknown";
+            if(results.features.length >0)
+            {
+                var pc4 = results.features[0].attributes.PC4
+            }
+            pcspan.innerHTML = pc4;
+            return pc4;
+            
+          });
+        }
+        function updateArcadeBlock(expression)
+        {
+          document.getElementById("arcadescript").innerHTML = expression;
+
+        }
+
+      });
+    </script>
+  </head>
+  <body>
+   
+      <!-- header -->
+        <div id="header" class="panel-dark-blue"><h2>JS And Arcade</h2></div>
+
+      <!-- content of page -->
+      <div id="bodywrapper"> 
+        <div id="sidepanel" class="panel"><h4>Status</h4>
+          <div>Renderer based on postalcode: <span id="postalcode">3811</span></div>
+          <br/>
+          <div>Update status: <span id="updatestatus">updating</span></div>
+          <br/>
+          <div>Arcade script used:<pre><span id="arcadescript">var input = {"x":599700,
+             "y":6828231,
+             "spatialReference:{"wkid":102100}}
+var geom = Geometry(input);
+return Distance($feature,geom);</span></pre></div>
+        </div>
+        <div id="mapDiv"></div>      
+      </div>
+    </div>
+    <div class="footer" role="contentinfo">
+      <!-- content of footer -->
+      <div class="esri-logo"></div>
+    </div>
+
+    <!-- interactive patterns need to be initialized -->
+    <script>
+       calcite.init()
+    </script>
+  </body>
+</html>
