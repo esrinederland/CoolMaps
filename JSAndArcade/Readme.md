@@ -7,6 +7,6 @@ This sample shows how you can combine JavaScript variables in Arcade expressions
 <br>
 <br>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/JSAndArcade/index.html)
+[here](https://esrinederland.github.io/CoolMaps/JSAndArcade/)
 
 Learn more about ArcGIS Arcade [here](https://developers.arcgis.com/arcade)
