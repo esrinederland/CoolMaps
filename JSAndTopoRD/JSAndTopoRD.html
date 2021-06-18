@@ -1,0 +1,114 @@
+<!doctype html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>ArcGIS JS and Topo RD Basemap (Vector Tiled)</title>
+  <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+  <!-- get calcite-web css from the cdn (use latest version) -->
+  <link rel="stylesheet"
+    href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    #header {
+      height: 60px;
+      padding: 10px 0px 0px 15px;
+    }
+
+    #bodywrapper {
+      display: block;
+      height: 100%;
+    }
+
+    #mapDiv {
+      height: 100%;
+    }
+
+    .footer {
+      padding-top: 10px;
+    }
+  </style>
+  <script
+    src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+  <script src="https://js.arcgis.com/4.19/"></script>
+  <script>
+    require([
+      "esri/WebMap",
+      "esri/views/MapView"
+    ], function (WebMap, MapView) {
+
+      var map = new WebMap({
+        portalItem: { // autocasts as new PortalItem()
+          id: "c8cb478cd4da4206a56e2a2fba545ccf"
+        }
+
+      });
+      var view = new MapView({
+        container: "mapDiv",
+        map: map,
+        center: {
+          x: 202857,
+          y: 501912,
+          spatialReference: 28992
+        },
+        zoom: 3
+      });
+      view.ui.add(document.getElementById("sidepanel"), "top-right");
+    });
+  </script>
+</head>
+
+<body>
+
+  <!-- header -->
+  <div id="header" class="panel-dark-blue">
+    <h2>ArcGIS JS and Topo RD Basemap (Vector Tiled)</h2>
+  </div>
+
+  <!-- content of page -->
+  <div id="bodywrapper">
+    <div id="sidepanel" class="panel">Code:
+      <pre>
+var map = new WebMap({
+  portalItem: { // autocasts as new PortalItem()
+    id: "c8cb478cd4da4206a56e2a2fba545ccf"
+  }});
+
+var view = new MapView({
+  container: "mapDiv",
+  map: map,
+  center: {
+    x: 202857,
+    y: 501912,
+    spatialReference: 28992
+  },
+  zoom: 3
+});
+      </pre>
+    </div>
+    <div id="mapDiv"></div>
+
+
+  </div>
+  </div>
+  <div class="footer" role="contentinfo">
+    <!-- content of footer -->
+    <div class="esri-logo"></div>
+  </div>
+
+  <!-- get calcite-web js from the cdn (use latest version) -->
+
+
+  <!-- interactive patterns need to be initialized -->
+  <script>
+    calcite.init()
+  </script>
+</body>
+
+</html>
