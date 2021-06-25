@@ -1,0 +1,237 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Community Map</title>
+    <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet"
+        href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #header {
+            height: 60px;
+            padding: 10px 0px 0px 15px;
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        #mapDiv {
+            height: 100%;
+        }
+
+        .footer {
+            padding-top: 10px;
+        }
+
+        .itemCard {
+            width: 100%;
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 5px;
+        }
+
+        .thumbnail {
+
+            width: 100px;
+            height: 60px;
+        }
+
+        .itemInfo {
+            padding-left: 5px;
+            width: 100%;
+        }
+
+        .itemTitle {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+            font-weight: bold;
+        }
+
+        .itemOwner {
+            font-size: smaller;
+        }
+
+        .itemDetails {
+            text-align: right;
+            width: 100%;
+
+        }
+
+        #cardTemplate {
+            display: none;
+        }
+        #infoPanel
+        {
+            width:300px;
+            height:300px;
+        }
+    </style>
+    <script
+        src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/4.19/"></script>
+    <script>
+        var map = null;
+        var view = null;
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/portal/Portal",
+            "esri/layers/FeatureLayer",
+            "esri/widgets/Legend",
+            "esri/widgets/Expand"
+        ], function (Map, MapView, Portal, FeatureLayer, Legend,
+            Expand) {
+
+            map = new Map({
+                basemap: "topo-vector"
+            });
+
+            view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.1, 52.5],
+                zoom: 9
+            });
+            view.ui.add(document.getElementById("sidepanel"), "top-right");
+            
+            var legend = new Legend({
+                view: view
+            });
+
+            var legendExpand = new Expand({
+                expandIconClass: "esri-icon-legend",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font/
+                expandTooltip: "Expand Legend", // optional, defaults to "Expand" for English locale
+                view: view,
+                content: legend
+            });
+            view.ui.add(legendExpand, {
+                position: "bottom-left"
+            });
+
+            var infoExpand = new Expand({
+                expandIconClass: "esri-icon-question",  // see https://developers.arcgis.com/javascript/latest/guide/esri-icon-font/
+                expandTooltip: "Show help", // optional, defaults to "Expand" for English locale
+                view: view,
+                content: document.getElementById("infoPanel")
+            });
+            view.ui.add(infoExpand, {
+                position: "bottom-left"
+            });
+
+            const portal = new Portal();
+            let tag = "CoolMaps21"
+            document.getElementById("tag").innerHTML = tag;
+            let queryParams = {
+                query: `tags:"${tag}" AND type:"Feature Service"`,
+                sortField: "modified",
+                sortOrder: "desc",
+                num: 10
+            };
+            // Query the items based on the queryParams created from portal above
+
+            portal.queryItems(queryParams).then(results => {
+                console.log("results:", results)
+                document.getElementById("totalmaps").innerHTML = results.total;
+                template = document.getElementById("cardTemplate").outerHTML;
+                panel = document.getElementById("items");
+                results.results.forEach(item => {
+                    console.log(item.title);
+                    itemtext = template.replace("cardTemplate", `item_${item.id}`);
+                    itemtext = itemtext.replace("@title@", item.title);
+                    itemtext = itemtext.replace("@type@", item.type);
+                    itemtext = itemtext.replace("@owner@", item.owner);
+                    itemtext = itemtext.replaceAll("@itemid@", item.id);
+                    itemtext = itemtext.replace("https://via.placeholder.com/90x60.png", item.thumbnailUrl);
+                    panel.innerHTML += itemtext;
+
+                    var fl = new FeatureLayer({ portalItem: { id: item.id } });
+                    map.add(fl, 0);
+                });
+            });
+        });
+        function zoomto(itemid) {
+            var fl = map.layers.find((x) => x.portalItem.id == itemid);
+            var query = { where: "1=1", outSpatialReference: { wkid: view.spatialReference.wkid } };
+            fl.queryExtent(query).then(response => {
+                console.log("extent response: ", response);
+                view.goTo(response.extent);
+            });
+
+        }
+        function toggleVisible(itemid, object) {
+            var fl = map.layers.find((x) => x.portalItem.id == itemid);
+            fl.visible = !fl.visible;
+            if (fl.visible) {
+                object.innerHTML = "Hide";
+            }
+            else {
+                object.innerHTML = "Show";
+            }
+        }
+    </script>
+</head>
+
+<body style="--esri-calcite-theme-name: dark">
+
+    <!-- header -->
+    <div id="header" class="panel-dark-blue">
+        <h2>Community App: CoolMaps21</h2>
+    </div>
+
+    <!-- content of page -->
+    <div id="bodywrapper">
+        <div id="sidepanel" class="panel">
+            <div id="layerTitle">
+                Layers in this map</div>
+            <div id="items">
+                <div class="itemCard" id="cardTemplate">
+                    <div class="thumbnailpanel"><img class="thumbnail" src="https://via.placeholder.com/90x60.png" />
+                    </div>
+                    <div class="itemInfo">
+                        <div class="itemTitle">@title@</div>
+                        <div class="itemOwner">@type@ by @owner@</div>
+                        <div class="itemDetails"><a href="#" onclick="toggleVisible('@itemid@',this);">Hide</a> | <a
+                                href="#" onclick="zoomto('@itemid@');">Zoom to</a> | <a
+                                href="https://www.arcgis.com/home/item.html?id=@itemid@" target="_blank">Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tagCount">
+                Total layers with "<span id="tag">CoolMap21</span>" in <a href="https://www.arcgis.com/home/search.html?q=tags%3A%22CoolMaps21%22%20AND%20type%3A%22Feature%20Service%22&sortOrder=desc&sortField=modified" target="_blank">tags</a>: <span
+                id="totalmaps">-1</span>
+            </div>
+        </div>
+        <div id="infoPanel" class="panel"><h2>Info:</h2>
+            This app shows the 10 most recently modified public Feature Layers from ArcGIS Online that has the tag "CoolMaps21".<br/>
+        <br/>
+    If you want your layer to show in the app, give your layer the tag "CoolMaps21".</div>
+        <div id="mapDiv"></div>
+
+
+    </div>
+    </div>
+    <div class="footer" role="contentinfo">
+        <!-- content of footer -->
+        <div class="esri-logo"></div>
+    </div>
+    <!-- interactive patterns need to be initialized -->
+    <script>
+        calcite.init()
+    </script>
+</body>
+
+</html>
