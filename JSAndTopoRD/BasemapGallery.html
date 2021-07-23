@@ -1,0 +1,147 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>ArcGIS JS and Topo RD Basemap Gallery</title>
+    <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet"
+        href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.19/esri/themes/light/main.css">
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #header {
+            height: 60px;
+            padding: 10px 0px 0px 15px;
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        #mapDiv {
+            height: 100%;
+        }
+
+        .footer {
+            padding-top: 10px;
+        }
+        #sidepanel
+        {
+            width:500px;
+        }
+    </style>
+    <script
+        src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+    <script src="https://js.arcgis.com/4.19/"></script>
+    <script>
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/BasemapGallery",
+            "esri/widgets/Expand"
+        ], function (WebMap, MapView, BasemapGallery,Expand) {
+
+            var map = new WebMap({
+                portalItem: { // autocasts as new PortalItem()
+                    id: "c8cb478cd4da4206a56e2a2fba545ccf"
+                }
+
+            });
+            var view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: {
+                    x: 202857,
+                    y: 501912,
+                    spatialReference: 28992
+                },
+                zoom: 3
+            });
+
+            //create basemap gallery with a group id
+            var basemapGallery = new BasemapGallery({
+                view: view,
+                source: { 
+                    //GroupID Esri NL RD Basemaps
+                    query: "id:0a23b7ca2f0543bd89f29f6c28be4b4c" 
+                } 
+            });
+
+            //create an expand with the basemap Gallery
+            var basemapExpand = new Expand({
+                                            view:view,
+                                            content:basemapGallery,
+                                            expanded:true
+                                        });
+                                        
+            // Add the widget to the top-right corner of the view
+            view.ui.add(basemapExpand, {
+                position: "top-right"
+            });
+            
+            var codeExpand = new Expand({view:view,content:document.getElementById("sidepanel"),expanded:true});
+            view.ui.add(codeExpand, "bottom-right");
+        });
+    </script>
+</head>
+
+<body>
+
+    <!-- header -->
+    <div id="header" class="panel-dark-blue">
+        <h2>ArcGIS JS and Topo RD Basemap Gallery</h2>
+    </div>
+
+    <!-- content of page -->
+    <div id="bodywrapper">
+        <div id="sidepanel" class="panel">Code:
+            <pre>
+//create basemap gallery with a group id
+var basemapGallery = new BasemapGallery({
+    view: view,
+    source: { 
+        //GroupID Esri NL RD Basemaps
+        query: "id:0a23b7ca2f0543bd89f29f6c28be4b4c" 
+    } 
+});
+
+//create an expand with the basemap Gallery
+var basemapExpand = new Expand({
+                                view:view,
+                                content:basemapGallery,
+                                expanded:true
+                            });
+
+// Add the widget to the top-right corner of the view
+view.ui.add(basemapExpand, {
+    position: "top-right"
+});</pre>
+        </div>
+        <div id="mapDiv"></div>
+
+
+    </div>
+    </div>
+    <div class="footer" role="contentinfo">
+        <!-- content of footer -->
+        <div class="esri-logo"></div>
+    </div>
+
+    <!-- get calcite-web js from the cdn (use latest version) -->
+
+
+    <!-- interactive patterns need to be initialized -->
+    <script>
+        calcite.init()
+    </script>
+</body>
+
+</html>
