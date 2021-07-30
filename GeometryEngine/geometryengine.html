@@ -1,0 +1,387 @@
+<!doctype html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>GeometryService vs GeometryEngine</title>
+  <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+  <!-- get calcite-web css from the cdn (use latest version) -->
+  <link rel="stylesheet"
+    href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <script
+    src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+  
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    #header {
+      height: 60px;
+      padding: 10px 0px 0px 15px;
+    }
+
+    #bodywrapper {
+      display: block;
+      height: 100%;
+    }
+
+    #mapDiv {
+      height: 100%;
+    }
+
+    .footer {
+      padding-top: 10px;
+    }
+    .viewDivBase {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 49.9%;
+    }
+
+    #viewDiv2d {
+      float: left;
+    }
+
+    #viewDiv3d {
+      float: right;
+    }
+
+    #info {
+      color: #444;
+      font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      padding: 5px;
+      margin: 5px;
+      width: 120px;
+      text-align: center;
+      border: solid 2px #666;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+    #btnToggleEngineServer {
+      font-family: "Avenir Next W00", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      position: absolute;
+      top: 81px;
+      left: 60px;
+      width: 125px;
+      height: 23px;
+      padding: 7px;
+      text-align: center;
+      font-size: 16px;
+      border: 1px;
+    }
+
+    .btn-default {
+      color: #196fa6;
+      background-color: #fff;
+      border-color: #196fa6;
+    }
+
+    .btn-default :active,
+    .btn-default:hover {
+      background-color: #196fa6 !important;
+      color: #fff !important;
+      cursor: pointer;
+    }
+    .btn-warning {
+      color: #fff;
+      background-color: #DE970F;
+      border-color: #b03e17;
+    }
+
+    .btn-warning:hover,
+    .btn-danger:hover {
+      background-color: #FFAA00;
+      cursor: pointer;
+    }
+
+  </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.20/"></script>
+  <script>
+    //API Key account: mvanhulzendev
+    var esriConfig = {
+        apiKey: "AAPKebb4894e1cbf4d5096998b604118d544GXgE_UlMoQMv3ZCgJZnIk_dSjALeUleQrRYJGAs1vBKfxlKBxt2SYPlIdDWfhouy"
+    };
+    require([
+      "esri/Map",
+      "esri/views/SceneView",
+      "esri/views/MapView",
+      "esri/layers/GraphicsLayer",
+      "esri/Graphic",
+      "esri/geometry/geometryEngine",
+      "esri/tasks/GeometryService",
+      //"esri/tasks/support/BufferParameters",
+      "esri/rest/support/BufferParameters",
+      "dojo/on",
+      "dojo/dom",
+      "dojo/dom-class",
+      "dojo/domReady!"
+    ], function (
+      Map,
+      SceneView,
+      MapView,
+      GraphicsLayer,
+      Graphic,
+      geometryEngine,
+      GeometryService,
+      BufferParameters,
+
+      on,
+      dom,
+      domClass
+    ) {
+
+      // Create a 2D MapView and a 3D SceneView
+      // each referencing the same map with two
+      // graphics layers
+
+      var map = new Map({
+        basemap: "arcgis-imagery"
+      });
+      var useEngine = false;
+      //var geometryServiceUrl = "http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer";
+      var geometryServiceUrl = "https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer";
+      // Add two graphics layers to map: one for points, another for buffers
+
+      var geomService = new GeometryService({ url: geometryServiceUrl });
+      var bufferLayer = new GraphicsLayer();
+      var pointLayer = new GraphicsLayer();
+      map.addMany([bufferLayer, pointLayer]);
+
+      var viewOptions = {
+        map: map,
+        zoom: 3,
+        center: [-10, 40]
+      };
+
+
+      var view3d = new SceneView(viewOptions);
+      view3d.container = "viewDiv3d";
+      view3d.ui.add("info", "top-right");
+
+      var view2d = new MapView(viewOptions);
+      view2d.container = "viewDiv2d";
+
+      var polySym = {
+        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+        color: [140, 140, 222, 0.5],
+        outline: {
+          color: [0, 0, 0, 0.5],
+          width: 2
+        }
+      };
+
+      var pointSym = {
+        type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+        color: [255, 0, 0],
+        outline: {
+          color: [255, 255, 255],
+          width: 1
+        },
+        size: 7
+      };
+
+      // Indicates whether buffering is enabled
+
+      var bufferEnabled = false;
+
+      /**
+       * When the space bar is tapped, then buffering is enabled.
+       * @param {Object} evt - The event object associated with the
+       *   key-down event.
+       */
+      function keyDownListener(evt) {
+        var keyInput = evt.key;
+        bufferEnabled = (keyInput === " " || keyInput === "Spacebar") && !
+          bufferEnabled;
+        if (bufferEnabled) {
+          dom.byId("mode").innerHTML = "navigation";
+        } else {
+          dom.byId("mode").innerHTML = "buffering";
+        }
+      }
+
+      view2d.on("key-down", keyDownListener);
+      view3d.on("key-down", keyDownListener);
+
+      view2d.on("pointer-move", function (evt) {
+        if (bufferEnabled) {
+          createBuffer(evt, view2d);
+        }
+      });
+
+      view3d.on("pointer-move", function (evt) {
+        if (bufferEnabled) {
+          createBuffer(evt, view3d);
+        }
+      });
+
+      view2d.on("click", function (evt) {
+        bufferPoint(evt.mapPoint);
+      });
+
+      view3d.on("click", function (evt) {
+        bufferPoint(evt.mapPoint);
+      });
+
+
+      on(dom.byId("btnToggleEngineServer"), "click", function (evt) {
+        var btn = dom.byId("btnToggleEngineServer");
+        console.log("btn clicked");
+        if (useEngine) {
+          btn.innerHTML = "Using Server";
+          domClass.replace('btnToggleEngineServer', 'btn-default', 'btn-warning');
+          useEngine = false;
+        }
+        else {
+          btn.innerHTML = "Using Engine";
+          domClass.replace('btnToggleEngineServer', 'btn-warning', 'btn-default');
+          useEngine = true;
+        }
+
+      });
+
+      /**
+       * Stops propagation on the given event and constructs a point for
+       * buffering.
+       *
+       * @param {Object}   evt - Event object containing XY screen coordinates.
+       * @param {Mapview | SceneView} view - View instance from which the point was obtained.
+       */
+      function createBuffer(evt, view) {
+        // prevent further propagation of the current event bubbling up the event chain.
+        // in this case, it will prevent default `drag` event behavior for the MapView
+        // which is to move around the view by dragging the pointer.
+        evt.stopPropagation();
+
+        // convert screen coordinates to map coordinates
+        var point = view.toMap({
+          x: evt.x,
+          y: evt.y
+        });
+
+        if (point) {
+          bufferPoint(point);
+        }
+
+      }
+
+      /**
+       * Buffers the given point by 560 kilometers.
+       *
+       * @param {esri/geometry/Point} point - A point instance to buffer.
+       */
+      function bufferPoint(point) {
+        if (!bufferEnabled) {
+          console.log(
+            "buffering not enabled. Hit the space bar key and click/drag to buffer."
+          );
+          return;
+        }
+
+        clearGraphics();
+
+        // removes z values from the point when taken from a SceneView.
+        // GeometryEngine does not support 3D geometries.
+        point.hasZ = false;
+        point.z = undefined;
+
+        pointLayer.add(new Graphic({
+          geometry: point,
+          symbol: pointSym
+        }));
+
+        /********************************************************************
+         * Geodesic buffer calculates the true distance to buffer a point,
+         * minimizing the distortion that exists when buffering points away
+         * from a projection's line of tangency. This distortion is evident
+         * in the 2D view of this application. This map uses a Web Mercator
+         * spatial reference, which has a line of tangency at the equator.
+         * Buffers created on the equator have very little distortion in their
+         * shape. The further buffers are created away from the equator, the
+         * more distorted they will be in their shape.
+         *
+         * If using a standard planar buffer, the shape of the buffers won't
+         * distort in 2D views, but their size and areas will be very distorted
+         * as they move away from the equator.
+         ********************************************************************/
+        if (useEngine) {
+          var buffer = geometryEngine.geodesicBuffer(point, 560, "kilometers");
+          bufferLayer.add(new Graphic({
+            geometry: buffer,
+            symbol: polySym
+          }));
+        }
+        else {
+          var params = new BufferParameters();
+          params.distances = [560];
+          params.unit = "kilometers";
+          params.geodesic = true;
+          params.bufferSpatialReference = view2d.spatialReference;
+          params.outSpatialReference = view2d.spatialReference;
+          params.geometries = [point];
+
+
+          geomService.buffer(params).then(function (results) {
+            var buffer = results[0];
+            bufferLayer.add(new Graphic({
+              geometry: buffer,
+              symbol: polySym
+            }));
+
+          });
+        }
+      }
+
+      /**
+       * Clears all graphics from all GraphicsLayers
+       */
+      function clearGraphics() {
+        pointLayer.removeAll();
+        bufferLayer.removeAll();
+      }
+
+    });
+
+  </script>
+</head>
+<body>
+  <!-- header -->
+  <div id="header" class="panel-dark-blue">
+    <h2>GeometryService vs GeometryEngine</h2>
+  </div>
+
+  <!-- content of page -->
+  <div id="bodywrapper">
+    <div class="viewDivBase" id="viewDiv2d">
+        <div class="btn-default" id="btnToggleEngineServer">Using Server</div>
+      </div>
+      <div class="viewDivBase" id="viewDiv3d">
+        <div id="info">
+          <div>
+            <label class="chkLabel">Press <strong>space bar</strong> to enable <strong><span
+                  id="mode">buffering</span>.</strong>
+              Then click or move the mouse to buffer.
+            </label></div>
+    
+        </div>
+      </div>
+
+  </div>
+  </div>
+  <div class="footer" role="contentinfo">
+    <!-- content of footer -->
+    <div class="esri-logo"></div>
+  </div>
+
+  <!-- interactive patterns need to be initialized -->
+  <script>
+    calcite.init()
+  </script>
+</body>
+
+</html>
