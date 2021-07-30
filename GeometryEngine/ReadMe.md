@@ -1,6 +1,7 @@
 # GeometryService vs GeometryEngine
-![GeometryEngine](../images/geometryengine.png)
-This example shows how the power of the geometryengine.
+![GeometryEngine](../images/GeometryEngine.png)
+
+This example shows how the power of the GeometryEngine.
 
 
 Toggle the button to switch between the use of the geometryservice and the geometryengine and see the difference in performance. 
