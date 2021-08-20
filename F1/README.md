@@ -11,6 +11,9 @@ https://github.com/esrinederland/DevDay-2021/blob/main/APIs/F1.html
 View the live sample here:
 https://esrinederland.github.io/DevDay-2021/APIs/F1.html
 
+For more information about the F1 API:
+https://ergast.com
+
 
 View the complete presentation here:
 
