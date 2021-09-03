@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Popup positions - dock</title>
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.20/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.20/"></script>
+
+    <script>
+      require([
+        "esri/config", 
+        "esri/Map", 
+        "esri/views/MapView", 
+        "esri/WebMap"
+        ], function (esriConfig, Map, MapView, WebMap) {
+        
+        esriConfig.apiKey = "AAPKae3dab1f05f948b69237b3469b47aa40ccRlxQCH8occ_IBIyNrAhGtY9NaONVg54soZcUqSolmTHii1ZAZ8YFr6Dmf1AcHW";
+
+        var webmap = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem()
+            id: "cc0f6682a9654e28bf54d9fe3906e27a"
+          }
+        });
+
+        var view = new MapView({
+          map: webmap,
+          popup: {
+            dockEnabled: true,
+            dockOptions: {
+              // Disables the dock button from the popup
+              buttonEnabled: false,
+              // Ignore the default sizes that trigger responsive docking
+              breakpoint: false,
+              // Define the position where the popup should dock
+              // Possible Values:"auto"|"top-center"|"top-right"|"top-left"|"bottom-left"|"bottom-center"|"bottom-right"
+              position: "top-left"
+            },
+            visibleElements: {
+              closeButton: true
+            }
+          },
+          container: "viewDiv"
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv">
+    </div>
+  </body>
+</html>

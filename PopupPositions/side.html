@@ -1,0 +1,120 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1,user-scalable=no"
+    />
+    <title>
+      Popup positions - Feature Widget in side panel
+    </title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.20/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.20/"></script>
+
+    <style>
+      html,
+      body {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv {
+        float: left;
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 70%;
+      }
+
+      #popupContainer {
+        float: left;
+        width: 30%;
+        height: 100%;
+        padding: 1em;
+        overflow-y: auto;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/config",
+        "esri/WebMap",
+        "esri/layers/FeatureLayer",
+        "esri/views/MapView",
+        "esri/widgets/Feature"
+      ], function (esriConfig, WebMap, FeatureLayer, MapView, Feature) {
+
+        esriConfig.apiKey = "AAPKae3dab1f05f948b69237b3469b47aa40ccRlxQCH8occ_IBIyNrAhGtY9NaONVg54soZcUqSolmTHii1ZAZ8YFr6Dmf1AcHW";
+
+        const map = new WebMap({
+          portalItem: {
+            // autocasts as new PortalItem
+            id: "cc0f6682a9654e28bf54d9fe3906e27a"
+          }
+        });
+
+        const view = new MapView({
+          container: "viewDiv",
+          map: map,
+          popup: {
+            autoOpenEnabled: false
+          }
+        });
+
+        view.when().then(function () {
+          // Get the layer with gemeenten from the webmap
+          var fLayer = view.map.layers.find((x) => x.title == "Gemeenten");
+          // Create a default graphic for when the application starts
+          const graphic = {
+            popupTemplate: {
+              content: "Click on features to show details..."
+            }
+          };
+
+          // Provide graphic to a new instance of a Feature widget
+          const feature = new Feature({
+            container: "popupContainer",
+            graphic: graphic,
+            map: view.map,
+            spatialReference: view.spatialReference
+          });
+
+          view.whenLayerView(fLayer).then(function (layerView) {
+            let highlight;
+            // listen for the click event on the View
+            view.on("click", function (event) {
+              // Perform a hitTest on the View
+              view.hitTest(event).then(function (event) {
+                // Make sure graphic has a popupTemplate
+                let results = event.results.filter(function (result) {
+                  return result.graphic.layer.popupTemplate;
+                });
+                // Get the first graphic that is returned by the click event
+                let result = results[0];
+                highlight && highlight.remove();
+                // Update the graphic of the Feature widget with the result
+                if (result) {
+                  feature.graphic = result.graphic;
+                  highlight = layerView.highlight(result.graphic);
+                } else {
+                  feature.graphic = graphic;
+                }
+              });
+            });
+          });
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="popupContainer" class="esri-widget"></div>
+    <div id="viewDiv"></div>
+  </body>
+</html>
