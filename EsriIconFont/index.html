@@ -1,0 +1,201 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>The Esri Icon Font (Calcite theme) Example</title>
+    <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet"
+        href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <script
+        src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #header {
+            height: 60px;
+            padding: 10px 0px 0px 15px;
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        #textpanel {
+            height: 200px;
+            display: none;
+        }
+
+        #mapDiv {
+            height: 100%;
+        }
+
+        .customCalciteButton {
+            width: 32px;
+            height: 32px;
+            background: white;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .customCalciteButton:hover {
+            background: #f3f3f3;
+        }
+
+        .customCalciteIcon, .customCalciteFont {
+          padding: 8px;
+          color: #6e6e6e;
+          position: relative;
+        }
+
+        .customCalciteFont {
+          font-family: 'CalciteWebCoreIcons';
+          font-size: 8;
+        }
+        
+        .customCalciteFontSpan {
+          top: 7px;
+          left: 1px;
+        }
+
+        .footer {
+            padding-top: 10px;
+        }
+
+        .panel {
+            width: 500px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.20/"></script>
+    <script>
+        var esriConfig = {
+            apiKey: "AAPKebb4894e1cbf4d5096998b604118d544GXgE_UlMoQMv3ZCgJZnIk_dSjALeUleQrRYJGAs1vBKfxlKBxt2SYPlIdDWfhouy"
+        };
+
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "dojo/dom-style"
+        ], function (Map, MapView, Expand, domStyle) {
+
+            const textPanel = document.getElementById("textpanel");
+
+            var map = new Map({
+                basemap: "arcgis-topographic" //basemap type
+            });
+
+            var view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.1, 52.5], //longitude and latitude of the initial center location
+                zoom: 11 //initial location
+            });
+
+            const visibilityDiv = document.createElement("div");
+            visibilityDiv.className = "customCalciteButton";
+            visibilityDiv.title = "Toggle Visibility";
+
+            const visibilityIcon = document.createElement("span");
+            visibilityIcon.className = "customCalciteIcon esri-icon-non-visible";
+            visibilityDiv.appendChild(visibilityIcon);
+
+            view.ui.add(visibilityDiv, "top-right");
+
+            visibilityDiv.onclick = () => {
+                if(visibilityIcon.classList.contains("esri-icon-visible")) {
+                    visibilityIcon.className = "customCalciteIcon esri-icon-non-visible";
+                    domStyle.set(textPanel, "display", "none");
+                } else {
+                    visibilityIcon.className = "customCalciteIcon esri-icon-visible";
+                    domStyle.set(textPanel, "display", "block");
+                }
+            }
+
+            view.ui.add(textPanel, "top-right");
+
+            const applicationsDiv = document.createElement("div");
+            applicationsDiv.className = "customCalciteButton";
+            applicationsDiv.title = "Applications";
+
+            const applicationsIcon = document.createElement("span");
+            applicationsIcon.className = "customCalciteFont customCalciteFontSpan";
+            applicationsIcon.innerHTML = "\ue636";
+            applicationsDiv.appendChild(applicationsIcon);
+
+            view.ui.add(applicationsDiv, "top-right");
+
+            view.ui.add(document.getElementById("elevationDiv"), "top-right");
+
+            //create an expand with a custom panel
+            var codeExpand = new Expand({
+                expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+                view: view,
+                content: document.getElementById("sidepanel"),
+                expanded: true
+            });
+            //add the panel to the UI
+            view.ui.add(codeExpand, "bottom-right");
+        });
+    </script>
+</head>
+
+<body>
+    <!-- header -->
+    <div id="header" class="panel-dark-blue">
+        <h2>The Esri Icon Font (Calcite theme) Example</h2>
+    </div>
+
+    <!-- content of page -->
+    <div id="bodywrapper">
+        <div id="sidepanel" class="panel">
+            <!-- HTML generated using hilite.me -->
+            <div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%">
+<span style="color: #0000ff">const</span> visibilityDiv = document.createElement(<span style="color: #a31515">&quot;div&quot;</span>);
+visibilityDiv.title = <span style="color: #a31515">&quot;Toggle Visibility&quot;</span>;
+
+<span style="color: #0000ff">const</span> visibilityIcon = document.createElement(<span style="color: #a31515">&quot;span&quot;</span>);
+visibilityIcon.className = <span style="color: #a31515">&quot;customCalciteIcon esri-icon-visible&quot;</span>;
+
+visibilityDiv.appendChild(visibilityIcon);
+
+view.ui.add(visibilityDiv, <span style="color: #a31515">&quot;top-right&quot;</span>);
+</pre></div>
+
+
+        </div>
+        <div id="mapDiv">
+            <div id="textpanel" class="panel">The unicode value for the symbol '<span class='customCalciteFont'>&#xe62a</span>' is '\ue62a'. 
+                Replace '\u' with '&#x' to create your own composed icons, like this 'code' icon:
+                <br><br>
+                <span class='customCalciteFont'>&#xe62a</span>/<span class='customCalciteFont'>&#xe62b</span>
+                <br><br>
+                <a href="https://developers.arcgis.com/javascript/latest/esri-icon-font/" target="_blank">https://developers.arcgis.com/javascript/latest/esri-icon-font/</a>
+            </div>
+        </div>
+
+        <div id="elevationDiv" class="customCalciteButton" title="Elevation"><span class="customCalciteFont customCalciteFontSpan">&#xe911</span></div>
+
+
+    </div>
+    </div>
+    <div class="footer" role="contentinfo">
+        <!-- content of footer -->
+        <div class="esri-logo"></div>
+    </div>
+
+    <!-- interactive patterns need to be initialized -->
+    <script>
+        calcite.init()
+    </script>
+</body>
+
+</html>
