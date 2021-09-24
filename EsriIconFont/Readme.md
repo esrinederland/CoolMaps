@@ -4,7 +4,7 @@ This sample shows how to use the Esri Icon Font to create custom buttons with an
 
 The Esri Icon Font is a monochromatic icon set used at Esri for a consistent Esri branded theme.
 
-Icon fonts have several advantages such as the ability to quickly change their color, and the fact that icon fonts can size themselves to be proportional to text placed with them.
+Icon fonts have several advantages such as the ability to quickly change their color, and the fact that icon fonts can size themselves to be proportional to text placed with them. 
 
 ![The Esri Icon Font Example](../images/esri_icon_font.png)
 <br>
