@@ -1,0 +1,200 @@
+
+
+/*--------------------------------------------------------------------- File Name: responsive.css ---------------------------------------------------------------------*/
+
+
+/*------------------------------------------------------------------- 991px x 768px ---------------------------------------------------------------------*/
+
+@media (min-width: 1200px) and (max-width: 1500px) {
+    .cont span {
+        padding: 49px 0px 65px 0px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .weare .weare-box p {
+        font-size: 15px;
+        line-height: 25px;
+    }
+   
+    .cont span {
+        font-size: 48px;
+        padding: 50px 0px 65px 0px;
+    }
+    .text-bg h1 {
+        font-size: 41px;
+        line-height: 23px;
+    }
+    .text-bg span {
+        font-size: 48px;
+        line-height: 60px;
+    }
+    .text-bg {
+        max-width: 344px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .text-bg h1 {
+        padding-top: 10px;
+        font-size: 44px;
+        line-height: 61px;
+        padding-bottom: 0px;
+    }
+    .text-bg span {
+        font-size: 28px;
+        line-height: 30px;
+    }
+    .text-bg a {
+        margin-right: 5px;
+        padding: 10px 20px;
+        float: left;
+        max-width: 156px;
+    }
+    .text-bg {
+        max-width: 251px;
+    }
+   
+    .cont span {
+        font-size: 35px;
+        padding: 30px 0px 43px 0px;
+        line-height: 57px;
+    }
+    .slider a {
+        font-size: 12px;
+    }
+    .contact .titlepage {padding-bottom: 0;}
+    .main_form {
+        padding: 25px;
+    }
+  .quality_text {margin-right: 0px;}
+  .quality_text h3 {font-size: 25px;}
+  .quality_text p {font-size: 14px;
+line-height: 22px;}
+ .contact {
+    margin-top: 60px;
+background: #6302d3;
+padding-bottom: 60px;
+padding-top: 0px;
+}
+    .bg_ba {background: inherit;}
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .mean-container .mean-bar {
+        margin-top: 0px;
+    }
+    .text-bg a {
+        float: left;
+        margin-bottom: 30px;
+    }
+    .titlepage h2 {
+        font-size: 36px;
+    }
+   
+    .text-bg {
+        max-width: 509px;
+    }
+    .cont span {
+        padding: 0px 0px 30px 0px;
+    }
+    .cont a {
+        max-width: 233px;
+        margin-bottom: 30px;
+    }
+    .contact {
+        margin-top: 70px;
+    }
+     .contact {
+background: #6302d3;
+padding-bottom: 60px;
+padding-top: 0px;
+}
+    .bg_ba {background: inherit;}
+
+    .quality_text h3 {font-size: 28px;}
+.quality_text {
+    margin-left:0px;
+    margin-right: 0px;
+    margin-top:10px;
+}
+.main_form {
+
+    padding-top: 30px;
+
+} 
+.quality { padding-bottom: 230px;  }
+.customers {margin-top: -245px;}
+}
+
+@media (max-width: 575px) {
+    .header {
+        padding: 40px 0px 0px 0px;
+    }
+    .logo {
+        text-align: center !important;
+        padding-bottom: 25px;
+        float: inherit;
+    }
+    ul.costomer {
+        display: none;
+    }
+   
+    .text-bg h1 {
+        font-size: 35px;
+        line-height: 55px;
+        padding-bottom: 18px;
+    }
+    .text-bg a {
+        float: left;
+        margin-bottom: 30px;
+    }
+    .text-bg span {
+        font-size: 35px;
+        line-height: 45px;
+    }
+    .text-bg p {
+        padding-top: 0;
+    }
+    .titlepage h2 {
+        font-size: 36px;
+
+line-height: 46px;
+    }
+    .contact .titlepage {
+        padding-bottom: 10px;
+        padding-top: 0;
+    }
+    .main_form {
+        padding: 35px 25px;
+    }
+    .cont span {
+        padding: 15px 0px 25px 0px;
+        font-size: 31px;
+        line-height: 46px;
+    }
+    .cont a {
+        max-width: 233px;
+        margin-bottom: 30px;
+    }
+    .contact {
+        margin-top: 60px;
+background: #6302d3;
+padding-bottom: 60px;
+padding-top: 0px;
+}
+    .bg_ba {background: inherit;}
+    .slider a {font-size: 16px;}
+.quality_text h3 {font-size: 28px;}
+.quality_text {
+    margin-left:0px;
+    margin-right: 0px;
+    margin-top:10px;
+}
+.quality {padding-bottom: 228px;}
+.customers {margin-top: -224px;}
+.banner2 .carousel-caption p {font-size: 14px;}
+.contact .titlepage h2 {padding-top: 40px;}
+
+}
+

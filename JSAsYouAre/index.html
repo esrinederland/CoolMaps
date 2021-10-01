@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <!-- basic -->
+   <meta charset="utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <!-- mobile metas -->
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+   <!-- site metas -->
+   <title>ArcGIS as you are</title>
+   <meta name="keywords" content="">
+   <meta name="description" content="">
+   <meta name="author" content="">
+   <!-- bootstrap css -->
+   <link rel="stylesheet" href="css/bootstrap.min.css">
+   <!-- style css -->
+   <link rel="stylesheet" href="css/style.css">
+   <!-- Responsive-->
+   <link rel="stylesheet" href="css/responsive.css">
+
+   <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+   
+   <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+
+   <style>
+      .text-img {
+         display: grid;
+      }
+
+      #mapDiv {
+         height: 100%;
+         grid-column: 1;
+         grid-row: 1;
+         height: 74.5%;
+         width: 74%;
+         margin-top: 18%;
+
+      }
+
+      #mapDiv canvas {
+         border-radius: 50%;
+      }
+
+      .my2 {
+         grid-column: 1;
+         grid-row: 1;
+         z-index: 2;
+         pointer-events: none;
+      }
+
+      .my3 {
+         grid-column: 1;
+         grid-row: 1;
+         z-index: 3;
+         pointer-events: none;
+         transform: rotate(90deg);
+      }
+
+      .esri-zoom {
+         top: calc(55% - 64px);
+         left: 1%;
+         background-color: transparent;
+
+      }
+
+      .esri-zoom .esri-widget--button {
+         background-color: #fa7528;
+         border-radius: 50%;
+         margin: 2px;
+      }
+
+      .esri-zoom .esri-icon {
+         color: #492B73;
+      }
+
+      #attribution {
+         /* //color: #fff; */
+         font-weight: 500;
+         font-size: 17px;
+         line-height: 28px;
+         padding: 40px 0;
+         background-color: transparent;
+         display: block;
+      }
+
+      #attribution .esri-attribution__sources {
+         white-space: inherit;
+      }
+
+      .simpaly {
+         background-color: #FFFFFF;
+      }
+   </style>
+
+</head>
+<!-- body -->
+
+<body class="main-layout">
+   <!-- header -->
+   <header>
+      <!-- header inner -->
+      <div class="header_bg">
+         <div class="header">
+            <div class="container">
+               <div class="row">
+                  <div class="col-xl-3 col-lg-3 col-md-3 col-sm-3 col logo_section">
+                     <div class="full">
+                        <div class="center-desk">
+                           <div class="logo">
+                              <a href="index.html"><img src="images/Esri_Nederland_Emblem_tag-R_1CRev.png"
+                                    alt="#" /></a>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-xl-9 col-lg-9 col-md-9 col-sm-9">
+                     <ul class="costomer">
+                        <li> <a href="mailto:developers@esri.nl"><span>Reach Us : </span>developers@esri.nl</a></li>
+                     </ul>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <!-- end header inner -->
+         <!-- end header -->
+         <!-- banner -->
+         <section class="banner_main">
+            <div class="container-fluid">
+               <div class="row d_flex">
+                  <div class="col-md-6">
+                     <div class="text-bg">
+
+                        <h1 id="mapTitle">MapTitle</h1>
+                        <p id="mapDesciption">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc a volutpat
+                           orci. Donec eu urna in sapien scelerisque posuere ac quis quam. Fusce rutrum fermentum
+                           libero, ut pharetra eros ultrices vel. Aliquam iaculis ex ac nisi fringilla, a vulputate
+                           dolor ullamcorper. Nunc non posuere nisl.</p>
+                        <a href="https://developers.arcgis.com" id="btnMoreInfo" target="_blank">More info</a>
+
+
+                     </div>
+                  </div>
+                  <div class="col-md-6">
+
+                     <div class="text-img">
+                        <div id="mapDiv" class="my1"></div>
+                        <figure class="my2"><img src="images/img_nohead.png" /></figure>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </section>
+      </div>
+   </header>
+   <!-- end banner -->
+
+
+   <!-- Asked -->
+   <div class="bg_ba">
+      <div class="asked_main">
+         <div class="container">
+            <div class="row">
+               <div class="col-md-12">
+                  <div class="titlepage">
+                     <h2>Map Information</h2>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <div class="container">
+            <div class="row d_flexw">
+
+               <div class="col-md-6">
+                  <div class="ask_box" id="resultDiv">
+           
+                     <div class="simpaly">
+                        <div class="slider"><a href="#">
+                              What do the numbers below represent?</a>
+                        </div>
+                        <div class="content">
+                           <p> The numbers below show the number of items of a specific type in the map.
+                           </p>
+                        </div>
+                     </div>
+                     
+                  </div>
+                  <div class="ask_box">
+                     <div class="simpaly">
+                        <div class="slider"><a href="#">
+                              Map Attribution</a>
+                        </div>
+                        <div id="attribution" class="content">
+                        </div>
+                     </div>
+                     </div>
+
+
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+
+  
+   </div>
+   <!-- end contact -->
+   <!--  footer -->
+   <footer>
+      <div class="footer">
+         <div class="container">
+            <div class="row">
+               <div class="col-md-12">
+                  <p>© 2021 All Rights Reserved. <a href="https://html.design/download/labspa-beauty-salon-template/">Template from HTML.design</a></p>
+               </div>
+            </div>
+         </div>
+      </div>
+   </footer>
+
+   <script src="https://js.arcgis.com/4.21/"></script>
+
+   <script>
+      var esriConfig = { apiKey: "AAPKebb4894e1cbf4d5096998b604118d544GXgE_UlMoQMv3ZCgJZnIk_dSjALeUleQrRYJGAs1vBKfxlKBxt2SYPlIdDWfhouy" }
+      var layerInfos = [];
+      require([
+         "esri/Map",
+         "esri/WebMap",
+         "esri/views/MapView",
+
+         "esri/widgets/Zoom",
+         "esri/widgets/Attribution"
+      ], function (Map, WebMap, MapView, Zoom, Attribution) {
+
+         //create the webmap
+         //d94742b7755a4c54be8a957dfd11cce1 - Orange Map
+         var map = new WebMap({ portalItem: { id: "d94742b7755a4c54be8a957dfd11cce1" } });
+
+         //add the webmap to the view
+         var view = new MapView({
+            container: "mapDiv",
+            map: map,
+            ui: { components: [] } //remove the zoombuttons and attributeion because they are outsite of the circle
+         });
+
+         //create custom zoom buttons because the standard zoombuttons are outside the circle
+         var zoom = new Zoom({ view: view })
+         view.ui.add(zoom, "manual");
+
+         //create custom attribution widget because the standard is outside the circle
+         var attribution = new Attribution({ view: view, container: document.getElementById("attribution") });
+
+         //set the maptitle and description in the app based on the webmap properties
+         view.when(() => {
+            document.getElementById("mapTitle").innerHTML = view.map.portalItem.title;
+            document.getElementById("mapDesciption").innerHTML = view.map.portalItem.description;
+
+         });
+         //when the view is completely ready loaded get all the layers and counts
+         view.watch("ready", (newValue, oldValue, propertyName, target) => {
+            console.log("view update: ", view.ready);
+            //console.log("view loaded", view);
+            SetCounters();
+
+         });
+         //when the map changes update all the counters
+         view.watch("extent", () => {
+            UpdateCounters();
+         })
+
+         function createWhereClause(fieldName, fieldValue) {
+            var newValue = fieldValue
+            if (typeof fieldValue === 'string' || fieldValue instanceof String) {
+               newValue = `'${fieldValue}'`
+
+            }
+            return `${fieldName} = ${newValue}`
+         }
+         
+         async function SetCounters() {
+            for (lay of view.map.layers) {
+               if (lay.type == "feature") {
+                  var lvw = await view.whenLayerView(lay)
+                  var tempLayerInfo = [];
+                  var rend = lvw.layer.renderer
+                  if (rend.type == "unique-value") {
+                     for (var uvv of rend.uniqueValueInfos) {
+                        console.log("uvv", uvv, uvv.value);
+                        tempLayerInfo.push({ field: rend.field, value: uvv.value, whereClause: createWhereClause(rend.field, uvv.value) })
+                     }
+                  }
+                  else {
+                     tempLayerInfo.push({ field: lay.title, value: lay.title,whereClause:"1=1" });
+                  }
+                  for (layerInfo of tempLayerInfo) {
+                     var results = await lvw.layer.queryFeatureCount({ where: layerInfo.whereClause })
+                     console.log(layerInfo.whereClause, 'total:', results);
+                     layerInfo.layerView = lvw;
+                     layerInfo.total = results;
+                     let layerId = `${layerInfo.layerView.layer.id}_${layerInfo.field}_${layerInfo.value}`;
+                     let parentPanel = document.createElement("DIV");
+                     parentPanel.classList.add("simpaly");
+                     document.getElementById("resultDiv").appendChild(parentPanel);
+
+                     let currentPanel = document.createElement("DIV");
+                     currentPanel.id = layerId;
+                     currentPanel.classList.add("slider");
+                     parentPanel.appendChild(currentPanel);
+                     layerInfo.panel = currentPanel;
+                     layerInfos.push(layerInfo);
+                  };
+
+               }
+            };
+            UpdateCounters();
+
+         }
+
+         function UpdateCounters() {
+            console.log("Start update")
+            const extent = view.extent
+            //for (layerBuffer of layersBuffer) {
+
+               layerInfos.map((layerInfo) => {
+                  layerInfo.layerView.queryFeatureCount({ geometry: extent, where: layerInfo.whereClause }).then((count) => {
+                     
+                     layerInfo.panel.innerHTML = `${layerInfo.value}: ${count} / ${layerInfo.total}`
+
+                  });
+               })
+
+
+            //}
+         }
+      });
+   </script>
+</body>
+
+</html>
