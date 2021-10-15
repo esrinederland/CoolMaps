@@ -1,0 +1,130 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>No Map Border</title>
+    <!-- <link rel="shortcut icon" href="/img/favicon.ico"> -->
+    <!-- get calcite-web css from the cdn (use latest version) -->
+    <link rel="stylesheet"
+        href="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/css/calcite-web.min.css">
+    <script
+        src="https://s3-us-west-1.amazonaws.com/patterns.esri.com/files/calcite-web/1.2.5/js/calcite-web.min.js"></script>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        #header {
+            height: 60px;
+            padding: 10px 0px 0px 15px;
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        .mapcontainer {
+
+            height: 50%;
+            width: 100%;
+        }
+
+        #mapDivNoBorder .esri-view-surface:focus::after {
+
+            outline: auto 0px !important;
+
+        }
+
+
+        .footer {
+            padding-top: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+    <script>
+        var esriConfig = {
+            apiKey: "AAPKebb4894e1cbf4d5096998b604118d544GXgE_UlMoQMv3ZCgJZnIk_dSjALeUleQrRYJGAs1vBKfxlKBxt2SYPlIdDWfhouy"
+        };
+
+        require([
+            "esri/Map",
+            "esri/views/MapView"
+        ], function (Map, MapView) {
+
+            var map = new Map({
+                basemap: "arcgis-topographic" //basemap type
+            });
+
+            var viewBorder = new MapView({
+                container: "mapDivBorder",
+                map: map,
+                center: [6.1, 52.5], //longitude and latitude of the initial center location
+                zoom: 11 //initial location
+            });
+
+            var viewNoBorder = new MapView({
+                container: "mapDivNoBorder",
+                map: map,
+                center: [6.1, 52.5], //longitude and latitude of the initial center location
+                zoom: 11 //initial location
+            });
+
+            syncView(viewBorder, viewNoBorder);
+            syncView(viewNoBorder, viewBorder);
+
+            function syncView(view1, view2) {
+
+                view1.watch("extent", () => {
+                    if (view1.focused) {
+                        view2.goTo(view1.extent);
+                    }
+                }); 
+                view1.watch("rotation", () => {
+                    if (view1.focused) {
+                        view2.rotation = view1.rotation;
+                    }
+                }); 
+
+            }
+            //add the panel to the UI
+            viewNoBorder.ui.add(document.getElementById("sidepanel"), "top-right");
+        });
+    </script>
+</head>
+
+<body>
+    <!-- header -->
+    <div id="header" class="panel-dark-blue">
+        <h2>No Map Border</h2>
+    </div>
+
+    <!-- content of page -->
+    <div id="bodywrapper">
+        <div id="sidepanel" class="panel">Code:
+            <pre>
+#mapDivNoBorder .esri-view-surface:focus::after {
+    outline: auto 0px !important;
+}
+</div>
+        <div id="mapDivBorder" class="mapcontainer" style="background-color:#FFB3B3"></div>
+        <div id="mapDivNoBorder" class="mapcontainer" style="background-color:#B3FFB3"></div>
+    </div>
+    </div>
+    <div class="footer" role="contentinfo">
+        <!-- content of footer -->
+        <div class="esri-logo"></div>
+    </div>
+
+    <!-- interactive patterns need to be initialized -->
+    <script>
+        calcite.init()
+    </script>
+</body>
+
+</html>
