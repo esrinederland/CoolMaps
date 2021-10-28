@@ -57,14 +57,14 @@
     <script nomodule="" src="https://js.arcgis.com/calcite-components/1.0.0-beta.63/calcite.js"></script>
 
     <script>
-    function geocode() {
+    function findAddressCandidates() {
         let url = 'https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates';
         try {
             // Define the parameters object (well known to ArcGIS developers)
             const params = {
                 "f": "json", 
                 "singleline" : document.getElementById("geocodeAddress").value, 
-                "token" : "AAPKa98061360f86416ba8aefb20e5b29b50Y9Ij_8wBbyARHtgmngATQXObb7-2pu6BDNDExjgXPvUXC00aB2Qg73YmvXaDK8LX"
+                "token" : "AAPKae3dab1f05f948b69237b3469b47aa40ccRlxQCH8occ_IBIyNrAhGtY9NaONVg54soZcUqSolmTHii1ZAZ8YFr6Dmf1AcHW"
             };
 
             // This is where the magic happens
@@ -107,7 +107,7 @@
       <div id="formDiv">
           Type (part of) an address: 
           <calcite-input id="geocodeAddress" value="Koggelaan 33, Zwolle"></calcite-input>
-          <calcite-button onclick="geocode()">Find Address Candidates</calcite-button>&nbsp;[<a href="https://developers.arcgis.com/rest/geocode/api-reference/geocoding-find-address-candidates.htm" target="_blank">Documentation</a>]
+          <calcite-button onclick="findAddressCandidates()">Find Address Candidates</calcite-button>&nbsp;[<a href="https://developers.arcgis.com/rest/geocode/api-reference/geocoding-find-address-candidates.htm" target="_blank">Documentation</a>]
         </div>
         <pre id="resultData"></pre>
     </div>
