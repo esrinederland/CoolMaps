@@ -59,8 +59,9 @@
         "esri/Map",
         "esri/views/MapView",
         "esri/widgets/Directions",
+        "esri/widgets/Expand",
         "esri/config"],
-            function (Map, MapView, Directions, esriConfig) {
+            function (Map, MapView, Directions, Expand, esriConfig) {
                 // An authorization string used to access the basemap
                 esriConfig.apiKey = "AAPKe01a20e8ad7e440198742d1ab6076833f0s7nAR5KdbVQ5q4hgntSfz5IF4qpY9SibgtmESZ8wIAQ2WhqMGAplARt_EI0Fcj";
 
@@ -94,6 +95,16 @@
                     position: "bottom-left"
                 });
 
+                //create an expand with a custom panel
+                var codeExpand = new Expand({
+                    expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+                    view: view,
+                    content: document.getElementById("sidepanel"),
+                    expanded: true
+                });
+                //add the panel to the UI
+                view.ui.add(codeExpand, "top-right");
+
             });
 
     </script>
@@ -105,6 +116,21 @@
         <!-- custom header for the shell -->
         <div slot="header" id="header">
             <h2 id="header-title">Directions Widget - Demo</h2>
+        </div>
+
+        <div id="sidepanel" class="panel">
+            <!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #008000">// Add a Directions widget that contains it&#39;s own API key</span>
+<span style="color: #0000ff">let</span> directionsWidgetWithApiKey = <span style="color: #0000ff">new</span> Directions({
+    view: view,
+    apiKey: <span style="color: #a31515">&quot;YOUR-API-KEY&quot;</span>
+});
+<span style="color: #008000">// Add the Directions widgets to the right bottom of the view</span>
+view.ui.add(directionsWidgetWithApiKey, {
+    position: <span style="color: #a31515">&quot;bottom-right&quot;</span>
+});
+</pre></div>
+
+
         </div>
 
         <div id="mapDiv"></div>
