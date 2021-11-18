@@ -8,7 +8,7 @@ This samples shows how to use the Directions widget with a specific API key. Thi
 In the example you see that there's also a Directions widget added on the left hand side that does not contain it's own API key. And because the general API key used on the page doesn't support routing, the widget doesn't work.
 <br>
 <br>
-View this cool example live:
+View this example live:
 [here](https://esrinederland.github.io/CoolMaps/DirectionsWidget/index.html)
 
 
