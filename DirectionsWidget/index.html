@@ -1,0 +1,119 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Directions Widget - Demo</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+    </style>
+    <script>
+
+        require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/widgets/Directions",
+        "esri/config"],
+            function (Map, MapView, Directions, esriConfig) {
+                // An authorization string used to access the basemap
+                esriConfig.apiKey = "AAPKe01a20e8ad7e440198742d1ab6076833f0s7nAR5KdbVQ5q4hgntSfz5IF4qpY9SibgtmESZ8wIAQ2WhqMGAplARt_EI0Fcj";
+
+                const map = new Map({
+                    basemap: "arcgis-topographic"
+                });
+
+                var view = new MapView({
+                    container: "mapDiv",
+                    zoom: 14,
+                    center: [6.1, 52.5],
+                    map: map
+                });
+
+                // Add a Directions widget that contains it's own API key
+                let directionsWidgetWithApiKey = new Directions({
+                    view: view,
+                    apiKey: "AAPKb0ba4eb60a3241e2b642645bee3624e22_X5UxW4yOtw6imudCKSvUw09ceiSxHrSW1PFUg0w44PyTHo2BKJj9hEzKLvm7Kf"
+                });
+
+                // And one without an API key
+                let directionsWidgetWithoutApiKey = new Directions({
+                    view: view
+                });
+
+                // Add the Directions widgets to the left and right bottom of the view
+                view.ui.add(directionsWidgetWithApiKey, {
+                    position: "bottom-right"
+                });
+                view.ui.add(directionsWidgetWithoutApiKey, {
+                    position: "bottom-left"
+                });
+
+            });
+
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">Directions Widget - Demo</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+</html>
