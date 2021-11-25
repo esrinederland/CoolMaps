@@ -1,0 +1,338 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMap: Layer Blending </title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(esri-logo-reversed.svg);
+        }
+
+        calcite-loader {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+        }
+
+        a {
+            color: var(--calcite-ui-text-link)
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/Search",
+            "esri/widgets/LayerList",
+            "esri/widgets/Legend",
+            "esri/widgets/Expand"],
+            function (WebMap, MapView, Search, LayerList, Legend, Expand) {
+
+                // Create the map based on a webmap
+                var map = new WebMap({
+                    portalItem: { id: "0e8a91bd0ab74e83b40e65472add4021" }
+                });
+
+                // Create the map view
+                var view = new MapView({
+                    container: "mapDiv",
+                    map: map
+                });
+
+                //add the widgets
+                var search = new Search({
+                    view: view,
+                    popupEnabled: false,
+                    resultGraphicEnabled: false,
+                });
+                //if a search result is found instead of zoom to it, filter on that point
+                search.goToOverride = (view, goToParams) => {
+
+                    FilterOnPoint(goToParams.target.target.geometry.centroid);
+
+                };
+                var searchExpand = new Expand({
+                    view: view,
+                    content: search,
+                    expandIconClass: "esri-icon-search",
+                    expanded: false
+                });
+                view.ui.add(searchExpand, "top-right");
+
+                var screenShotExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("screenshot-panel"),
+                    expandIconClass: "esri-icon-maps"
+                });
+                view.ui.add(screenShotExpand, "top-right");
+
+                var infoExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("info-panel"),
+                    expandIconClass: "esri-icon-notice-round",
+                    expanded: true
+                });
+                view.ui.add(infoExpand, "bottom-right");
+
+                //add the event handlers
+                view.when(() => {
+
+                    view.on("click", (evt) => {
+                        FilterOnPoint(evt.mapPoint);
+                    });
+                });
+
+                //the setting of the definition queries can take a while , so we need to wait for the map to update and than remove the loader
+                view.watch("updating", function (newValue, oldValue, propertyName, target) {
+                    if (newValue === false) {
+                        // hide the loader
+                        ActivateLoader(false);
+                    }
+                });
+
+                //the function that filters the map on a point
+                function FilterOnPoint(mappoint) {
+                    // set the loader to active
+                    ActivateLoader(true);
+
+                    //find the (invisible) layer with alle wijken
+                    var fl = view.map.layers.find((x) => x.title == "AlleWijken");
+
+                    //query the layer to see what statcode is at the point
+                    fl.queryFeatures({
+                        geometry: mappoint,
+                        returnGeometry: true,
+                        outFields: ["STATCODE"]
+                    }).then((results) => {
+                        //if there is a result
+                        if (results.features.length > 0) {
+                            //get the feature and the statcode
+                            var feature = results.features[0];
+                            var statcode = feature.attributes.statcode;
+
+                            //get all the filters with the title "CBS Wijk actueel"
+                            //these are the layers that make the blending happen
+                            let filteredLayers = view.map.allLayers.filter(function (layer) {
+                                return layer.title == "CBS Wijk actueel";
+                            });
+
+                            //set the new definition query on the layers
+                            var newDefStatement = `STATCODE='${statcode}'`;
+                            filteredLayers.map(function (layer) {
+                                layer.definitionExpression = newDefStatement;
+                            });
+
+                            //determine the new extent for the map
+                            var newExtent = feature.geometry.extent.expand(1.5)
+
+                            //zom to the new extent and constrain the view to that extent
+                            view.goTo(newExtent)
+                            view.constraints.geometry = newExtent;
+                        }
+                    });
+                }
+
+                //functions to get a formatted date (for the download)
+                Date.prototype.yyyymmdd = function () {
+                    var yyyy = this.getFullYear();
+                    var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
+                    var dd = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
+                    return "".concat(yyyy).concat(mm).concat(dd);
+                };
+
+                Date.prototype.yyyymmddhhmm = function () {
+                    var yyyymmdd = this.yyyymmdd();
+                    var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
+                    var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
+                    return "".concat(yyyymmdd).concat(hh).concat(min);
+                };
+
+                Date.prototype.yyyymmddhhmmss = function () {
+                    var yyyymmddhhmm = this.yyyymmddhhmm();
+                    var ss = this.getSeconds() < 10 ? "0" + this.getSeconds() : this.getSeconds();
+                    return "".concat(yyyymmddhhmm).concat(ss);
+                };
+
+                //use the screenshot function to take a screenshot of the map
+                var btnScreenshot = document.getElementById("btnScreenshot");
+                btnScreenshot.addEventListener("click", () => {
+                    view.takeScreenshot().then(function (screenshot) {
+                        var imageUrl = getImageWithText(screenshot,"Powered by Esri")
+                        var img = document.getElementById("imgScreenshot");
+                        img.src = imageUrl;
+                        //display the download panel
+                        document.getElementById("screenshotDiv").style.display = "block";
+                    });
+                });
+
+                //add a text to the screenshot
+                function getImageWithText(screenshot, text) {
+                    const imageData = screenshot.data;
+
+                    // to add the text to the screenshot we create a new canvas element
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d");
+                    canvas.height = imageData.height;
+                    canvas.width = imageData.width;
+
+                    // add the screenshot data to the canvas
+                    context.putImageData(imageData, 0, 0);
+                    context.font = "12px Avenir Next";
+                    context.fillStyle = "#242424";
+                    context.fillRect(
+                        imageData.width-context.measureText(text).width - 20,
+                        imageData.height - 40,
+                        context.measureText(text).width + 20,
+                        30
+                    );
+
+                    // add the text from the textInput element
+                    context.fillStyle = "#d1d1d1";
+                    context.fillText(text, imageData.width-context.measureText(text).width - 10, imageData.height - 20);
+
+                    return canvas.toDataURL();
+                }
+
+                //function to download the screenshot
+                var downloadBtn = document.getElementById("downloadBtn");
+                downloadBtn.addEventListener("click", () => {
+                    var url = document.getElementById("imgScreenshot").src;
+                    var tag = document.createElement('a');
+                    tag.href = url;
+                    var d = new Date();
+                    tag.download = `${d.yyyymmddhhmmss()}_coolmap.png`;
+                    document.body.appendChild(tag);
+                    tag.click();
+                    document.body.removeChild(tag);
+
+                });
+
+                //activate of hide the loader animation
+                function ActivateLoader(active) {
+                    var loader = document.querySelector("calcite-loader");
+                    loader.active = active;
+                }
+            });
+
+    </script>
+</head>
+
+<body class="calcite-theme-dark">
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMap: Layer Blending </h2>
+        </div>
+
+        <!--The panel for the action bar on the left -->
+        <calcite-shell-panel id="primary-panel" slot="primary-panel" position="start" detached>
+
+            <!--The panels that respond to the buttons, de data-panel-id corresponds to the data-action-id from the buttons-->
+            <calcite-panel heading="Screenshot" height-scale="l" width-scale="m" data-panel-id="screenshot"
+                id="screenshot-panel">
+                <div id="screenshot-container" class="info-container">
+                    <div style="width: 100%; padding: 1rem; box-sizing: border-box;">
+                        Click to make a screenshot of the current map<br /><br />
+                        <calcite-button appearance="clear" alignment="center" color="blue" scale="m" width="auto"
+                            calcite-hydrated="" id="btnScreenshot">Take Screenshot</calcite-button>
+                        <div id="screenshotDiv" style="display:none;">
+                            <img class="js-screenshot-image" id="imgScreenshot" style="width:100%" />
+
+                            <calcite-button appearance="clear" alignment="center" color="blue" scale="m" width="auto"
+                                id="downloadBtn">
+                                Download image
+                            </calcite-button>
+
+                        </div>
+                    </div>
+                </div>
+            </calcite-panel>
+
+            <calcite-panel heading="Layer Blending" height-scale="l" width-scale="m" data-panel-id="info"
+                id="info-panel" style="width:420px;">
+                <div id="info-container" class="info-container" style="padding: 1rem;width:420px;">
+                    <p>
+                        By using layer blending this sample "highlights" a neighborhood on the map. The neighborhood is
+                        given a "halo" and the area surrounding it is blurred using multiple layers in the webmap.
+                    </p>
+                    <p>
+                        Either use the search or click on the map to highlight a neighborhood. There's a restriction on
+                        panning and zooming once a neighborhood is highlighted, so it will always remain in view.
+                    </p>
+                    <p>Use the screenshot functionality to make a screenshot of the current map and download it as an
+                        image to your harddrive.
+                    </p>
+                    <p>
+                        Thanks to <a
+                            href="https://www.arcgis.com/apps/instant/basic/index.html?appid=858dceec6de145e78105dbbb2bf4e969"
+                            target="_blank">Ruben Bruining</a> for the inspriation.
+                    </p>
+                </div>
+            </calcite-panel>
+
+        </calcite-shell-panel>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo logo-white"></div>
+        </div>
+    </calcite-shell>
+    <calcite-loader active scale="l" type="indeterminate"></calcite-loader>
+</body>
+
+</html>
