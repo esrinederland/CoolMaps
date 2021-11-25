@@ -5,7 +5,7 @@ This sample shows how you can use layer blending to make stunning maps and how t
 <br>
 <br>
 Try example live:
-[here](https://esrinederland.github.io/CoolMaps/LayerBlending/)
+[here](https://esrinederland.github.io/CoolMaps/LayerBlending/index.html)
 
 ---
 
