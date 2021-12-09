@@ -1,0 +1,160 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>ArcGIS CIM Symbols - Demo</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.71/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.71/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+    </style>
+    <script>
+        //API Key account: mvanhulzendev
+        var esriConfig = { apiKey: "AAPKebb4894e1cbf4d5096998b604118d544GXgE_UlMoQMv3ZCgJZnIk_dSjALeUleQrRYJGAs1vBKfxlKBxt2SYPlIdDWfhouy" }
+
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+
+            "esri/request",
+            "esri/Graphic",
+            "esri/symbols/CIMSymbol",
+            "esri/widgets/Expand"],
+            function (Map, MapView,
+                esriRequest, Graphic, CIMSymbol, Expand) {
+
+                var map = new Map({
+                    basemap: "arcgis-topographic"
+                });
+
+                var view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    center: [6.1, 52.5],
+                    zoom: 13
+                });
+
+
+                function AddGraphic(geometry, symbolList) {
+
+                    var symbolIndex = view.graphics.length % symbolList.length;
+                    var cimDef = symbolList[symbolIndex]
+
+                    if (cimDef.symbolLayers[0].markerGraphics[0].hasOwnProperty("textString")) {
+                        cimDef.symbolLayers[0].markerGraphics[0].textString = String(Math.ceil(view.graphics.length / symbolList.length))
+                    }
+
+                    var symbol = new CIMSymbol({
+                        data: {
+                            type: "CIMSymbolReference",
+                            symbol: cimDef
+                        }
+                    });
+                    var graphic = new Graphic({
+                        geometry: geometry,
+                        symbol: symbol
+                    });
+                    view.graphics.add(graphic);
+                }
+                var infoExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("info-panel"),
+                    expandIconClass: "esri-icon-notice-round",
+                    expanded: true
+                });
+                view.ui.add(infoExpand, "bottom-right");
+                view.when(() => {
+                    esriRequest("symbols.json", { responseType: "json" }).then((response) => {
+                        console.log("response", response);
+                        var symbolList = response.data;
+
+                        AddGraphic({ type: "point", longitude: 6.07203, latitude: 52.502783 }, symbolList);
+                        AddGraphic({ type: "point", longitude: 6.09203, latitude: 52.502783 }, symbolList);
+                        AddGraphic({ type: "point", longitude: 6.11203, latitude: 52.502783 }, symbolList);
+                        AddGraphic({ type: "point", longitude: 6.13203, latitude: 52.502783 }, symbolList);
+                        view.on("click", (event) => {
+                            AddGraphic(event.mapPoint, symbolList);
+                        });
+                    });
+                });
+            });
+
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">ArcGIS CIM Symbols - Demo</h2>
+        </div>
+
+        <!--The info panel -->
+        <calcite-panel heading="CIM Symbols" height-scale="l" width-scale="m" data-panel-id="info" id="info-panel"
+            style="width:420px;">
+            <div id="info-container" class="info-container" style="padding: 1rem;width:420px;">
+                <p>
+                    With CIMSymbols it is possible to create custom symbols for use in the ArcGIS API for JavaScript.
+                </p>
+                <p>
+                    Not only can a complex symbol be made but also changed on the fly.
+                </p>
+            </div>
+        </calcite-panel>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+</html>
