@@ -1,0 +1,413 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>EsriNL DevTeam Christmas Card 2021</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.71/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.71/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        /* dark red: 4c1110
+        light red: 982220
+        */
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            /* --calcite-ui-foreground-1:#4c1110; */
+            
+        }
+
+        #header {
+            padding-left: 10px;
+            /* background-color: var(--calcite-ui-brand); */
+            background-image: url(christmas_background.png);
+            border-bottom: solid 3px #FFFFFF;
+            color: var(--calcite-ui-foreground-3);
+            text-shadow:1px 1px 10px #fff, 1px 1px 10px #ccc;
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+      
+    </style>
+    <script>
+        //API Key account: mvanhulzen_esrinl
+        const apiKey = "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l";
+        const routeServiceUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World/"
+        const xOffset = 1500;
+        const yOffset = 3000;
+
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/layers/FeatureLayer",
+            "esri/views/MapView",
+            "esri/rest/route",
+            "esri/rest/support/RouteParameters",
+            "esri/rest/support/FeatureSet",
+            "esri/rest/networkService",
+            "esri/views/2d/layers/BaseLayerViewGL2D",
+            "esri/core/watchUtils"],
+            function (Map,
+                WebMap,
+                Graphic,
+                GraphicsLayer,
+                FeatureLayer,
+                MapView,
+                route,
+                RouteParameters,
+                FeatureSet, networkService,
+                BaseLayerViewGL2D,
+                watchUtils) {
+
+                // var map = new Map({
+                //     basemap: "arcgis-dark-gray"
+                // });
+                var map = new WebMap({ portalItem: { id: "8c547986ba1649d7934ec0331639e738" } });
+
+                var view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    padding: { left: 49 },
+                    // center: [6.1, 52.5],
+                    // zoom: 13
+                });
+
+                var travelMode = null;
+                networkService.fetchServiceDescription(routeServiceUrl, apiKey).then((serviceDescription) => {
+                    // Find the named travel mode called "Walking Time".
+                    const { supportedTravelModes } = serviceDescription;
+                    travelMode = supportedTravelModes.find((mode) => mode.timeAttributeName === "WalkTime");
+                });
+
+                var ballLayer = new GraphicsLayer();
+                var treeLayer = new GraphicsLayer();
+
+                map.layers.add(treeLayer);
+                map.layers.add(ballLayer);
+                view.when(() => {
+                    var pointLayer = view.map.layers.find((x) => x.title == "Points");
+                    ballLayer.effect = pointLayer.effect;
+
+                    var lineLayer = view.map.layers.find((x) => x.title == "Lines");
+                    treeLayer.effect = lineLayer.effect;
+                });
+
+                view.on("click", (evt) => {
+                    console.log(evt);
+                    if (activeID == "createTree") {
+                        CreateTree(evt.mapPoint);
+                    }
+
+                });
+
+                document.getElementById("btnSaveTree").addEventListener("click", () => {
+                    SaveTree()
+                });
+
+                var activeID = "";
+                //get all the calcite action menu buttons and add click event
+                document.querySelectorAll("calcite-action").forEach(function (action) {
+
+                    action.addEventListener("click", function (event) {
+
+                        var actionId = event.target.dataset.actionId;
+                        //if the button is pressed twice all panels should close
+                        if (actionId == activeID) {
+                            actionId = "";
+                        }
+
+                        switch (actionId) {
+                            case "clearTree": ClearTree(); break;
+
+                        }
+                        console.log(`Clicked on action: ${actionId}`)
+                        //get all the calcite panels and hide them if it is not the one clicked
+                        document.querySelectorAll("calcite-shell-panel > calcite-panel").forEach(function (panel) {
+
+                            panel.hidden = !(panel.getAttribute("data-panel-id") == actionId);
+                            panel.active = (panel.getAttribute("data-panel-id") == actionId);
+
+                        });
+                        //set the last button id as the active one
+                        activeID = actionId;
+                    });
+                });
+
+                function CreateTree(mapPoint) {
+
+                    ClearTree();
+
+
+                    let routestops = [];
+                    // Setup the route parameters
+                    const routeParams = new RouteParameters({
+                        // An authorization string used to access the routing service
+                        apiKey: apiKey,
+                        stops: new FeatureSet(),
+                        outSpatialReference: view.map.spatialReference
+                        ,
+                        travelMode
+                    });
+
+                    let graphic = new Graphic({
+                        geometry: mapPoint,
+                        symbol: {
+                            type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                            color: "yellow",
+                            size: 15,
+                            outline: { // autocasts as new SimpleLineSymbol()
+                                width: 1,
+                                color: "black"
+                            }
+                        }
+                        , attributes: { pointtype: "ball3" }
+                    });
+                    ballLayer.add(graphic);
+                    //routeParams.stops.features.push(graphic);
+                    routestops[3] = graphic;
+
+                    for (var i = 1; i <= 3; i++) {
+                        var newY = mapPoint.y - (yOffset * i);
+
+                        var newX1 = mapPoint.x + (xOffset * i);
+                        var newX2 = mapPoint.x - (xOffset * i);
+                        if (i % 2 == 0) {
+                            console.log("Swapparoo");
+                            var nexXTemp = newX1;
+                            newX1 = newX2;
+                            newX2 = nexXTemp;
+                            //newX1,newX2 = newX2,newX1;
+                        }
+
+                        let graphic1 = new Graphic({
+                            geometry: { x: newX1, y: newY, type: "point", spatialReference: mapPoint.spatialReference },
+                            symbol: {
+                                type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                                color: "red",
+                                size: 15,
+                                outline: { // autocasts as new SimpleLineSymbol()
+                                    width: 1,
+                                    color: "black"
+                                }
+                            }
+                            , attributes: { pointtype: "ball1" }
+
+                        });
+                        //routeParams.stops.features.push(graphic1);
+                        routestops[3 - i] = graphic1;
+                        ballLayer.add(graphic1);
+                        let graphic2 = new Graphic({
+                            geometry: { x: newX2, y: newY, type: "point", spatialReference: mapPoint.spatialReference },
+                            symbol: {
+                                type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                                color: "green",
+                                size: 15,
+                                outline: { // autocasts as new SimpleLineSymbol()
+                                    width: 1,
+                                    color: "black"
+                                }
+                            }
+                            , attributes: { pointtype: "ball2" }
+
+                        });
+                        ballLayer.add(graphic2);
+                        //routeParams.stops.features.push(graphic2);
+                        routestops[3 + i] = graphic2;
+                    }
+
+                    for (r of routestops) {
+                        routeParams.stops.features.push(r);
+                    }
+                    route.solve(routeServiceUrl, routeParams).then((result) => {
+                        const routeResult = result.routeResults[0].route;
+
+                        var lineLayer = view.map.layers.find((x) => x.title == "Lines");
+                        routeResult.symbol = lineLayer.renderer.symbol;
+
+                        treeLayer.add(routeResult);
+
+
+                        const treeGraphics = routeResult.geometry.paths.map((path) => {
+                            const lineGraphic = {
+                                geometry: {
+                                    type: "polyline",
+                                    paths: [path],
+                                    spatialReference: routeResult.geometry.spatialReference
+                                },
+                                attributes: { "color": [2, 184, 24] }
+                            };
+                            return lineGraphic;
+                        });
+
+
+                        // const layer2 = new CustomLayer({
+                        //     graphics: treeGraphics
+                        // });
+
+                        // view.map.layers.add(layer2, 2);
+                    });
+                }
+
+                function ClearTree() {
+                    console.log("clearing trees")
+                    ballLayer.removeAll();
+                    treeLayer.removeAll();
+                }
+                function SaveTree() {
+                    console.log("saving tree");
+                    var treename = document.getElementById("treeName").value;
+                    // if (treename == "") {
+                    //     alert("Please enter a name for the tree");
+                    //     return;
+                    // }
+                    var newBalls = ballLayer.graphics;
+                    console.log("newballs:", newBalls);
+                    var peakBall = newBalls.find((x) => x.attributes.pointtype == "ball3");
+                    var textx = peakBall.geometry.x + (xOffset * 3);
+                    var texty = peakBall.geometry.y - (yOffset * 1);
+                    var textBall = new Graphic({
+                        geometry: { x: textx, y: texty, type: "point", spatialReference: peakBall.geometry.spatialReference }
+
+                        , attributes: { pointtype: "text", description: `Namens: ${treename}` }
+                    });
+                    newBalls.push(textBall);
+
+                    const ballFLayer = new FeatureLayer({
+                        // URL to the service
+                        url: "https://services.arcgis.com/emS4w7iyWEQiulAb/arcgis/rest/services/ChristmasTree_public_add/FeatureServer/0"
+                    });
+
+
+                    const lineFLayer = new FeatureLayer({
+                        // URL to the service
+                        url: "https://services.arcgis.com/emS4w7iyWEQiulAb/arcgis/rest/services/ChristmasTree_public_add/FeatureServer/1"
+                    });
+                    var ballProm = ballFLayer.applyEdits({ addFeatures: newBalls })
+
+                    var lineProm = lineFLayer.applyEdits({ addFeatures: treeLayer.graphics })
+
+                    Promise.all([ballProm, lineProm]).then((results => {
+                        console.log("edits done:", results);
+                        view.map.layers.map((layer)=>
+                        {
+                            if(["Points","Lines","Texts"].includes(layer.title))
+                            {
+                                console.log("refreshing layer:",layer.title);
+                                layer.refresh();
+                                layer.refreshInterval = 0.1;
+                            }
+                        })
+                        
+                        ClearTree();
+                    }));
+
+                }
+            });
+
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">EsriNL DevTeam Christmas Card 2021</h2>
+        </div>
+        <!--The panel for the action bar on the left -->
+        <calcite-shell-panel id="primary-panel" slot="primary-panel" position="start" detached>
+            <!--The action bar on the left -->
+            <calcite-action-bar slot="action-bar" id="actionbar">
+                <!--the action bar buttons grouped in two groups -->
+                <calcite-action-group>
+                    <calcite-action data-action-id="createTree" icon="layers-editable" text="Create a tree">
+                    </calcite-action>
+                    <calcite-action data-action-id="clearTree" icon="trash" text="Clear tree"></calcite-action>
+                    <calcite-action data-action-id="saveTree" icon="save" text="Save tree"></calcite-action>
+                </calcite-action-group>
+                <calcite-action-group >
+                  
+                    <calcite-action data-action-id="info" text="Info" icon="information"></calcite-action>
+                </calcite-action-group>
+            </calcite-action-bar>
+
+            <!--The panels that respond to the buttons, de data-panel-id corresponds to the data-action-id from the buttons-->
+            <calcite-panel heading="Save Tree" height-scale="l" width-scale="m" data-panel-id="saveTree" hidden>
+                <div id="saveTree-container">
+                    <div style="width: 100%; padding: 1rem; box-sizing: border-box;">
+                        Name:<br />
+                        <calcite-input type="text" label="Name" placeholder="Your name" status="idle" step="any"
+                            id="treeName"></calcite-input>
+                        <br />
+
+                        <calcite-button alignment="end" appearance="solid" color="blue" scale="m" width="auto"
+                            calcite-hydrated="" style="float:right;" id="btnSaveTree">Save</calcite-button>
+                    </div>
+                    <div style="width: 100%; padding: 1rem; box-sizing: border-box;">&nbsp;</div>
+
+                </div>
+            </calcite-panel>
+
+            <calcite-panel heading="Info" height-scale="l" width-scale="m" data-panel-id="info" hidden>
+                <div id="info-container" class="info-container" style="padding: 1rem;">
+                    <p>
+                        This demo is built using the Calcite Design System and the ArcGIS API for JavaScript.<br />
+                        The ArcGIS API for JavaScript provides a high-level interface for accessing data
+                        and functionality from ArcGIS Online and ArcGIS Enterprise.<br />
+                    </p>
+                    <p>
+                        More info: <a href="https://developers.arcgis.com/calcite-design-system/">ArcGIS Calcite Design
+                            System</a>
+                    </p>
+
+                </div>
+            </calcite-panel>
+
+        </calcite-shell-panel>
+
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+</html>
