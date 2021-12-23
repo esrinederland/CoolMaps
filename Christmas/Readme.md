@@ -8,8 +8,7 @@ If you want to save your tree in the Service click the "Save Tree" button, give 
 
 <br>
 <br>
-View this example live:
-[here](https://esrinederland.github.io/CoolMaps/Christmas/2021.html)
+View this example live: [here](https://esrinederland.github.io/CoolMaps/Christmas/2021.html)
 <br>
 <br>
 
