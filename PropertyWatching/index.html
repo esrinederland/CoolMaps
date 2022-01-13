@@ -1,0 +1,178 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>ArcGIS JS Property Watching
+    </title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.74/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.74/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+
+        .watchContainer {
+            padding: 5px;
+        }
+
+        .watchvalue {
+            width: 150px;
+            text-overflow: ellipsis;
+            display: block;
+        }
+    </style>
+    <script>
+        
+        var esriConfig = { apiKey: "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l" }
+        
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "esri/widgets/BasemapGallery"],
+            function (Map, MapView, Expand, BasemapGallery) {
+
+                //create a map
+                const map = new Map({
+                    basemap: "arcgis-topographic"
+                });
+
+                //set the view
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    zoom: 13
+                    , center: [6.1, 52.5]
+                });
+                
+                //creating a basemap gallery widget, put in in an expand widget and add it to the view
+                let basemapGallery = new BasemapGallery({
+                    view: view
+                });
+
+                let baseMapExpand = new Expand({ content: basemapGallery, view: view, expanded: false });
+
+                view.ui.add(baseMapExpand, {
+                    position: "top-left"
+                });
+
+                view.ui.add("watchPanel", "top-right");
+
+                //watch properties from view
+                view.watch("updating", WatchHandler);
+                view.watch("zoom", WatchHandler);
+                view.watch("center.x", WatchHandler);
+                view.watch("center.y", WatchHandler);
+                view.watch("map.basemap.title", WatchHandler);
+
+                //watch properties from the basemapexpand
+                baseMapExpand.watch("expanded", WatchHandler);
+
+                //simple function to handle the watch events
+                function WatchHandler(newValue, oldValue, propertyName, target) {
+
+                    //find result span
+                    let propSpan = document.getElementById(`${propertyName}`);
+                    //if span exists, update it
+                    if (propSpan) {
+                        propSpan.innerHTML = newValue;
+                    }
+                }
+            });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">ArcGIS JS Property Watching</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+    <calcite-panel id="watchPanel" heading="Watched Properties:">
+        <div id="watchContainer">
+            <table>
+                <tr>
+                    <td>Map Updating</td>
+                    <td class="watchvalue" id="updating"></td>
+                </tr>
+                <tr>
+                    <td>ZoomLevel</td>
+                    <td class="watchvalue" id="zoom"></td>
+                </tr>
+                <tr>
+                    <td>Center.X</td>
+                    <td class="watchvalue" id="center.x"></td>
+                </tr>
+                <tr>
+                    <td>Center.Y</td>
+                    <td class="watchvalue" id="center.y"></td>
+                </tr>
+                <tr>
+                    <td>Basemap title</td>
+                    <td class="watchvalue" id="map.basemap.title"></td>
+                </tr>
+                <tr>
+                    <td>Basemap expand expanded</td>
+                    <td class="watchvalue" id="expanded"></td>
+                </tr>
+            </table>
+
+        </div>
+    </calcite-panel>
+
+</body>
+
+</html>
