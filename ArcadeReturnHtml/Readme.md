@@ -9,9 +9,12 @@ These are the steps that need to be taken in the MapViewer. Note: this doesn't w
 <br/>
 ![Step 1](../images/ArcadeHTML_1.png)
 <br/>
+<br/>
 ![Step 2](../images/ArcadeHTML_2.png)
 <br/>
+<br/>
 ![Step 3](../images/ArcadeHTML_3.png)
+<br/>
 <br/>
 ![Step 4](../images/ArcadeHTML_4.png)
 <br/>
