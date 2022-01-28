@@ -142,7 +142,11 @@
     <span style="color: #000080; font-weight: bold">if</span> (intersectedFeatures != <span style="color: #000080; font-weight: bold">false</span>) {
         <span style="color: #000080; font-weight: bold">var</span> intersectCount = Count(intersectedFeatures)
         <span style="color: #000080; font-weight: bold">if</span>(intersectCount &gt; <span style="color: #0000FF">0</span>) {
-            <span style="color: #000080; font-weight: bold">var</span> url = <span style="color: #0000FF">&quot;https://www.esri.nl?ArcadePolygonOID=&quot;</span> + $feature[<span style="color: #0000FF">&quot;ObjectId&quot;</span>] + <span style="color: #0000FF">&quot;&amp;LayerName=&quot;</span> + layerName
+            <span style="color: #000080; font-weight: bold">var</span> pointOIDs = []
+            <span style="color: #000080; font-weight: bold">for</span> (<span style="color: #000080; font-weight: bold">var</span> pointFeature <span style="color: #000080; font-weight: bold">in</span> intersectedFeatures) {
+                Insert(pointOIDs, Count(pointOIDs), pointFeature[<span style="color: #0000FF">&quot;ObjectId&quot;</span>])
+            }
+            <span style="color: #000080; font-weight: bold">var</span> url = <span style="color: #0000FF">&quot;https://www.esri.nl?ArcadePolygonOID=&quot;</span> + $feature[<span style="color: #0000FF">&quot;ObjectId&quot;</span>] + <span style="color: #0000FF">&quot;&amp;LayerName=&quot;</span> + layerName + <span style="color: #0000FF">&quot;&amp;PointOIDs=&quot;</span> + Concatenate(pointOIDs, <span style="color: #0000FF">&quot;,&quot;</span>)
             <span style="color: #000080; font-weight: bold">var</span> string = <span style="color: #0000FF">&quot;&lt;a href=&#39;&quot;</span> + url + <span style="color: #0000FF">&quot;&#39;&gt;Link for &quot;</span> + intersectCount + <span style="color: #0000FF">&quot; intersecting point(s) on layer &quot;</span> + layerName + <span style="color: #0000FF">&quot;&lt;/a&gt;&lt;br&gt;&lt;br&gt;&quot;</span>
             htmlString += string
         }
@@ -154,6 +158,7 @@
 	text : htmlString <span style="color: #008800; font-style: italic">//this property supports html tags </span>
 }
 </pre></div>
+
 
         </div>
         <div id="mapDiv"></div>
