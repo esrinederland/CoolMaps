@@ -1,0 +1,385 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>DriveTimeArt
+    </title>
+    <script src="initZwolle.js"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.21/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+
+       
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+
+            "esri/geometry/Polygon",
+            "esri/widgets/LayerList",
+            "esri/rest/serviceArea",
+            "esri/rest/support/ServiceAreaParameters",
+            "esri/rest/support/ServiceAreaSolveResult",
+
+            "esri/rest/networkService",
+            "esri/rest/support/FeatureSet",
+            "esri/widgets/Search",
+            "esri/widgets/Expand"
+        ],
+            function (Map, WebMap, MapView, Graphic, GraphicsLayer,
+                Polygon, LayerList, serviceArea, ServiceAreaParameters, ServiceAreaSolveResult,
+                networkService, FeatureSet, Search, Expand) {
+
+                var graphicsItems = [];
+                //api key for mvanhulzen_esrinl
+                var apiKey = "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l";
+                var routeServiceUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/ServiceAreas/NAServer/ServiceArea_World";
+                var travelMode = null;
+                var loadComplete = false;
+
+                //get the webmap with the visualisations
+                const map = new WebMap({ portalItem: { id: "4ffe2e1c526c4af9b390870469598469" } });
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map
+                });
+
+                //add the widgets
+                var search = new Search({
+                    view: view,
+                    popupEnabled: false,
+                    resultGraphicEnabled: false,
+                });
+                //if a search result is found instead of zoom to it, filter on that point
+                search.goToOverride = (view, goToParams) => {
+
+                    CreateDriveTimeArt(goToParams.target.target.geometry.centroid);
+
+                };
+                var searchExpand = new Expand({
+                    view: view,
+                    content: search,
+                    expandIconClass: "esri-icon-search",
+                    expanded: true
+                });
+                view.ui.add(searchExpand, "top-right");
+
+                var screenShotExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("screenshot-panel"),
+                    expandIconClass: "esri-icon-maps"
+                });
+                view.ui.add(screenShotExpand, "top-right");
+
+                var infoExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("info-panel"),
+                    expandIconClass: "esri-icon-notice-round",
+                    expanded: true
+                });
+                view.ui.add(infoExpand, "bottom-right");
+
+                view.when(() => {
+
+                    // create a initial polygon
+                    var initialPolygon = new Polygon(initZwolle);
+
+
+                    //get feature layers
+                    var travelLayers = view.map.allLayers.items.filter(function (layer) {
+                        return layer.title.startsWith("Reistijd_analyse_15_minuten");
+                    });
+
+                    for (var fLayer of travelLayers) {
+                        //craete a graphics layer for each layer with the effects and blendmodes from the featurelayer
+                        var graphicsLayer = new GraphicsLayer();
+
+                        graphicsLayer.effect = fLayer.effect;
+                        graphicsLayer.blendMode = fLayer.blendMode;
+
+                        //creata a graphic for the layer with the symbol of the simple renderer of the featurelayer
+                        var symbol = fLayer.renderer.symbol;
+                        var tempGraphic = new Graphic({
+                            geometry: initialPolygon,
+                            symbol: symbol
+                        });
+                        graphicsLayer.add(tempGraphic);
+
+                        //get the parent of the layer (two of them are in a grouplayer)
+                        var parent = fLayer.parent;
+                        //in the grouplayers the index to add the graphicslayer is 1
+                        var index = 1;
+
+                        //this layer is not in a grouplayer, the index should be 0 (layer should be on top)
+                        if (fLayer.title == "Reistijd_analyse_15_minuten_1") {
+                            console.log("no parent, adding to map");
+                            parent = view.map;
+                            index = 0;
+                        }
+                        //save the graphicslayers for use in the drivetimeart function
+                        graphicsItems.push({
+                            layer: graphicsLayer,
+                            symbol: symbol
+                        });
+                        //add the graphicslayer to the map (or grouplayer)
+                        parent.add(graphicsLayer, index);
+                        //remove the featurelayer (we don't need it anymore)
+                        parent.remove(fLayer);
+
+                    }
+
+                    // get the travel mode from the service
+                    networkService.fetchServiceDescription(routeServiceUrl, apiKey).then((result) => {
+
+                        travelMode = result.supportedTravelModes.find(
+                            (travelMode) => travelMode.name === "Drive Time"
+                        );
+                        console.log("load complete");
+
+                        //if the travelmode is found set the loadComplete to true so the art can start
+                        loadComplete = true;
+                    });
+
+                });
+
+                // handle the map onclick events
+                view.on("click", (click_evt) => {
+
+                    //create the art on the map
+                    CreateDriveTimeArt(click_evt.mapPoint);
+                });
+
+                function CreateDriveTimeArt(mapPoint) {
+                    //only start the process if the load is complete (traveltimes have been fetched and layers have been created)
+                    if (loadComplete) {
+                        // create a graphic to show an the map and use as input 
+                        const start = new Graphic({
+                            geometry: mapPoint,
+                            symbol: {
+                                type: "simple-marker",
+                                color: "white",
+                                size: 8
+                            }
+                        });
+                        // add the graphic to the view
+                        view.graphics.removeAll();
+                        view.graphics.add(start);
+
+                        // create the service area parameters
+                        const serviceAreaParameters = new ServiceAreaParameters({
+                            apiKey: apiKey,
+                            facilities: new FeatureSet({
+                                features: [start]
+                            }),
+                            defaultBreaks: [10],
+                            travelMode: travelMode,
+                            travelDirection: "from-facility",
+                            outSpatialReference: view.spatialReference
+
+                        });
+                        // solve the service area
+                        // console.log("parameters: ", serviceAreaParameters);
+                        serviceArea.solve(routeServiceUrl, serviceAreaParameters).then((serviceAreaSolveResult) => {
+                            console.log("serviceAreaSolveResult", serviceAreaSolveResult);
+                            // get the polygon, set it as the geometry on the graphic in the tree graphics layser
+                            const serviceAreaPolygon = serviceAreaSolveResult.serviceAreaPolygons[0].geometry;
+                            for (var gi of graphicsItems) {
+                                gi.layer.graphics.items[0].geometry = serviceAreaPolygon;
+                            }
+                            console.log(serviceAreaPolygon);
+                            // zoom to the service area polygon
+                            view.goTo(serviceAreaPolygon);
+
+                        });
+                    }
+                }
+           
+                 //functions to get a formatted date (for the download)
+                 Date.prototype.yyyymmdd = function () {
+                    var yyyy = this.getFullYear();
+                    var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
+                    var dd = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
+                    return "".concat(yyyy).concat(mm).concat(dd);
+                };
+
+                Date.prototype.yyyymmddhhmm = function () {
+                    var yyyymmdd = this.yyyymmdd();
+                    var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
+                    var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
+                    return "".concat(yyyymmdd).concat(hh).concat(min);
+                };
+
+                Date.prototype.yyyymmddhhmmss = function () {
+                    var yyyymmddhhmm = this.yyyymmddhhmm();
+                    var ss = this.getSeconds() < 10 ? "0" + this.getSeconds() : this.getSeconds();
+                    return "".concat(yyyymmddhhmm).concat(ss);
+                };
+
+                //use the screenshot function to take a screenshot of the map
+                var btnScreenshot = document.getElementById("btnScreenshot");
+                btnScreenshot.addEventListener("click", () => {
+                    view.takeScreenshot().then(function (screenshot) {
+                        var imageUrl = getImageWithText(screenshot,"Powered by Esri")
+                        var img = document.getElementById("imgScreenshot");
+                        img.src = imageUrl;
+                        //display the download panel
+                        document.getElementById("screenshotDiv").style.display = "block";
+                    });
+                });
+
+                //add a text to the screenshot
+                function getImageWithText(screenshot, text) {
+                    const imageData = screenshot.data;
+
+                    // to add the text to the screenshot we create a new canvas element
+                    const canvas = document.createElement("canvas");
+                    const context = canvas.getContext("2d");
+                    canvas.height = imageData.height;
+                    canvas.width = imageData.width;
+
+                    // add the screenshot data to the canvas
+                    context.putImageData(imageData, 0, 0);
+                    context.font = "12px Avenir Next";
+                    context.fillStyle = "#242424";
+                    context.fillRect(
+                        imageData.width-context.measureText(text).width - 20,
+                        imageData.height - 40,
+                        context.measureText(text).width + 20,
+                        30
+                    );
+
+                    // add the text from the textInput element
+                    context.fillStyle = "#d1d1d1";
+                    context.fillText(text, imageData.width-context.measureText(text).width - 10, imageData.height - 20);
+
+                    return canvas.toDataURL();
+                }
+
+                //function to download the screenshot
+                var downloadBtn = document.getElementById("downloadBtn");
+                downloadBtn.addEventListener("click", () => {
+                    var url = document.getElementById("imgScreenshot").src;
+                    var tag = document.createElement('a');
+                    tag.href = url;
+                    var d = new Date();
+                    tag.download = `${d.yyyymmddhhmmss()}_coolmap.png`;
+                    document.body.appendChild(tag);
+                    tag.click();
+                    document.body.removeChild(tag);
+
+                });
+            });
+
+    </script>
+</head>
+
+<body class="calcite-theme-dark">
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMap: DriveTime Art</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+        <!--The panels that respond to the buttons, de data-panel-id corresponds to the data-action-id from the buttons-->
+        <calcite-panel heading="Screenshot" height-scale="l" width-scale="m" data-panel-id="screenshot"
+            id="screenshot-panel">
+            <div id="screenshot-container" class="info-container">
+                <div style="width: 100%; padding: 1rem; box-sizing: border-box;">
+                    Click to make a screenshot of the current map<br /><br />
+                    <calcite-button appearance="clear" alignment="center" color="blue" scale="m" width="auto"
+                        calcite-hydrated="" id="btnScreenshot">Take Screenshot</calcite-button>
+                    <div id="screenshotDiv" style="display:none;">
+                        <img class="js-screenshot-image" id="imgScreenshot" style="width:100%" />
+
+                        <calcite-button appearance="clear" alignment="center" color="blue" scale="m" width="auto"
+                            id="downloadBtn">
+                            Download image
+                        </calcite-button>
+
+                    </div>
+                </div>
+            </div>
+        </calcite-panel>
+
+        <calcite-panel heading="DriveTime Art" height-scale="l" width-scale="m" data-panel-id="info" id="info-panel"
+            style="width:420px;">
+            <div id="info-container" class="info-container" style="padding: 1rem;width:420px;">
+                <p>
+                    By clicking on the map or searching for a place the application will generate a "Drive Time Polygon" or "Service Area" of how far you can drive in 10 minutes from the place you clicked or searched.
+                </p>
+                <p>The visuals show the dutch motorways on a gray basemap and the drive time polygon with a lot of layer effects.
+                </p>
+                <p>Use the screenshot functionality to make a screenshot of the current map and download it as an
+                    image to your harddrive.
+                </p>
+                <p>
+                    Thanks to Ruben Bruining for the visuals.
+                </p>
+            </div>
+        </calcite-panel>
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+</html>
