@@ -8,7 +8,7 @@ It is also possible to create an image from the map to use as a background.
 <br>
 <br>
 Try this example example live:
-[here](https://esrinederland.github.io/CoolMaps/LayerBlending/index.html)
+[here](https://esrinederland.github.io/CoolMaps/DriveTimeArt/DriveTimeArt.html)
 
 ---
 
