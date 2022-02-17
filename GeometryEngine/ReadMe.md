@@ -15,7 +15,9 @@ See the live example [here](https://esrinederland.github.io/CoolMaps/GeometryEng
 ---
 
 <br>
+
 ## GeometryService vs GeometryEngine
+
 ![GeometryEngine](../images/GeometryEngine_vs_Service.png)
 
 Toggle the button to switch between the use of the GeometryService and the GeometryEngine and see the difference in performance. 
