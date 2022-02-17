@@ -22,6 +22,6 @@ Toggle the button to switch between the use of the GeometryService and the Geome
 
 
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/GeometryEngine/geometryengine_vs_Service.html)
+[here](https://esrinederland.github.io/CoolMaps/GeometryEngine/GeometryEngine_vs_GeometryService.html)
 
 View all functions of the GeometryEngine [here](https://developers.arcgis.com/javascript/latest/api-reference/esri-geometry-geometryEngine.html).
