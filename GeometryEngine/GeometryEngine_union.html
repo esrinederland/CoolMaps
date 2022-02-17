@@ -1,0 +1,238 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: GeometryEngine
+    </title>
+    <script src="initZwolle.js"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/Graphic",
+            "esri/geometry/geometryEngine",
+
+            "esri/widgets/Expand"
+        ],
+            function (Map, WebMap, MapView, Graphic, geometryEngine,
+                Expand) {
+
+                let mouseGraphic = null;
+                let mouseBuffer = null;
+                let unionGraphic = null;
+                let layerView = null;
+
+                //get the webmap as a starting point
+                const map = new WebMap({ portalItem: { id: "e6013088e2ad4e55b4a3898592099840" } });
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map
+                });
+
+                //create the expand for the summary widget
+                var infoExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("info-panel"),
+                    expandIconClass: "esri-icon-notice-round",
+                    expanded: true
+                });
+                view.ui.add(infoExpand, "top-right");
+
+                //when the view is loaded crate the graphics 
+                view.when(() => {
+                    view.graphics.removeAll();
+                    unionGraphic = new Graphic({
+                        geometry: null,
+                        symbol: {
+                            type: "simple-fill",
+                            outline: { width: 3, color: [255, 255, 255, 1] },
+                            color: [11, 13, 239, 0.55]
+                        }
+                    });
+                    view.graphics.add(unionGraphic);
+                    mouseBuffer = new Graphic({
+                        geometry: null,
+                        symbol: {
+                            type: "simple-fill",
+                            outline: { width: 2, color: [255, 255, 255, 1] },
+                            color: [13, 239, 11, 0.55]
+                        }
+                    });
+                    view.graphics.add(mouseBuffer);
+                    mouseGraphic = new Graphic({
+                        geometry: null,
+                        symbol: {
+                            type: "simple-marker",
+                            color: "white",
+                            size: 8
+                        }
+                    });
+                    view.graphics.add(mouseGraphic);
+
+                    //find the layer and overwrite the outfields
+                    var layer = view.map.layers.find((x) => x.title == "CBS Gemeenten 2021")
+                    layer.outFields = ["*"];
+
+                    view.whenLayerView(layer).then(function (lview) {
+                        layerView = lview;
+                        //when the layer view is loaded add the mouse move event
+                        view.on("pointer-move", (evt) => {
+
+                            BufferPoint(view.toMap(evt));
+                        });
+                    });
+
+                })
+
+                //function to buffer a point
+                function BufferPoint(mapPoint) {
+
+                    //move the geometry of the graphic
+                    
+
+                    var bufferpolygon = geometryEngine.buffer(mapPoint, 15, "kilometers");
+
+                    //mouseBuffer.geometry = bufferpolygon;
+
+                    //create a query to get the area feature
+                    const query = {
+                        geometry: bufferpolygon,
+                        returnGeometry: true,
+                        outFields: ["*"]
+                    };
+                    //query the layerview (that holds all the data on the client)
+                    layerView.queryFeatures(query).then((response) => {
+                        //console.log(response);
+                        var nrofHouses = 0;
+                        var nrofPeople = 0;
+                        var areaInKM = 0;
+                        var union  = null;
+                        var intersect = null;
+                        if (response.features.length > 0) {
+                            var geometries = response.features.map((x) => x.geometry);
+                            union = geometryEngine.union(geometries);
+                            
+                            intersect = geometryEngine.intersect(bufferpolygon,union);
+
+                            //calculate the summary variables 
+                            nrofHouses = response.features.reduce(function (a, b) { return a + b.attributes.aantal_hh; }, 0);
+                            nrofPeople = response.features.reduce(function (a, b) { return a + b.attributes.aant_inw; }, 0);
+
+                            areaInKM = Math.round(geometryEngine.planarArea(union, "square-kilometers") * 100) / 100;
+
+                        }
+                        mouseGraphic.geometry = mapPoint;
+                        mouseBuffer.geometry = intersect;
+                        unionGraphic.geometry = union;
+                        document.getElementById("nrofAreas").innerHTML = response.features.length;
+                        document.getElementById("nrofhh").innerHTML = nrofHouses;
+                        document.getElementById("nrofPpl").innerHTML = nrofPeople;
+                        document.getElementById("totalArea").innerHTML = areaInKM;
+                    });
+
+                }
+            });
+
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMap: Geometry Engine union() and intersect()</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+        <calcite-panel heading="Summary" height-scale="l" width-scale="m" data-panel-id="info" id="info-panel"
+            style="width:220px;">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+
+                <table>
+                    <tr>
+                        <td>Areas</td>
+                        <td>: <span id="nrofAreas">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Households</td>
+                        <td>: <span id="nrofhh">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>People</td>
+                        <td>: <span id="nrofPpl">0</span></td>
+                    </tr>
+                    <tr>
+                        <td>Total Area</td>
+                        <td>: <span id="totalArea">0</span>km&#178;</td>
+                    </tr>
+                </table>
+            </div>
+        </calcite-panel>
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+</html>
