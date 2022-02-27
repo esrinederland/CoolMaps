@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, user-scalable=no">
     <title>#CoolMaps: GeometryEngine
     </title>
-    <script src="initZwolle.js"></script>
     <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
     <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
     <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
@@ -146,8 +145,6 @@
                 function BufferPoint(mapPoint) {
 
                     //move the geometry of the graphic
-                    
-
                     var bufferpolygon = geometryEngine.buffer(mapPoint, 15, "kilometers");
 
                     //mouseBuffer.geometry = bufferpolygon;
@@ -234,5 +231,5 @@
     </calcite-shell>
 
 </body>
-
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </html>

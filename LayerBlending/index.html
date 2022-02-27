@@ -7,8 +7,8 @@
     <title>#CoolMap: Layer Blending </title>
     <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
     <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
-    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/dark/main.css">
-    <script src="https://js.arcgis.com/4.21/"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
 
     <style>
         html,
@@ -179,6 +179,7 @@
                             //zom to the new extent and constrain the view to that extent
                             view.goTo(newExtent)
                             view.constraints.geometry = newExtent;
+                            AddAction("CreatedNewLayerBlend");
                         }
                     });
                 }
@@ -213,6 +214,7 @@
                         img.src = imageUrl;
                         //display the download panel
                         document.getElementById("screenshotDiv").style.display = "block";
+                        AddAction("CreatedScreenshot")
                     });
                 });
 
@@ -255,6 +257,7 @@
                     document.body.appendChild(tag);
                     tag.click();
                     document.body.removeChild(tag);
+                    AddAction("DownloadedScreenshot");
 
                 });
 
@@ -334,5 +337,5 @@
     </calcite-shell>
     <calcite-loader active scale="l" type="indeterminate"></calcite-loader>
 </body>
-
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </html>

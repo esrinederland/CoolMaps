@@ -244,6 +244,7 @@
                             console.log(serviceAreaPolygon);
                             // zoom to the service area polygon
                             view.goTo(serviceAreaPolygon);
+                            AddAction("GeneratedPolygon")
 
                         });
                     }
@@ -274,6 +275,7 @@
                 var btnScreenshot = document.getElementById("btnScreenshot");
                 btnScreenshot.addEventListener("click", () => {
                     view.takeScreenshot().then(function (screenshot) {
+                        AddAction("CreateScreenshot")
                         var imageUrl = getImageWithText(screenshot,"Powered by Esri")
                         var img = document.getElementById("imgScreenshot");
                         img.src = imageUrl;
@@ -313,6 +315,7 @@
                 //function to download the screenshot
                 var downloadBtn = document.getElementById("downloadBtn");
                 downloadBtn.addEventListener("click", () => {
+                    AddAction("DownloadScreenshot")
                     var url = document.getElementById("imgScreenshot").src;
                     var tag = document.createElement('a');
                     tag.href = url;
@@ -381,5 +384,5 @@
     </calcite-shell>
 
 </body>
-
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </html>

@@ -896,7 +896,7 @@
                     var ballProm = pointEditLayer.applyEdits({ addFeatures: newBalls })
 
                     var lineProm = lineEditFLayer.applyEdits({ addFeatures: tempTreeLayer.graphics })
-
+                    AddAction("CreatedTree")
                     Promise.all([ballProm, lineProm]).then((results => {
                         console.log("edits done:", results);
                         view.map.layers.map((layer) => {
@@ -1019,5 +1019,5 @@
     </calcite-shell>
 
 </body>
-
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </html>
