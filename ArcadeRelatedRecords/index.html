@@ -1,0 +1,170 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Arcade Related Records
+    </title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-warning);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-brand-press);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(esri-logo.svg);
+        }
+
+        #bodywrapper {
+            display: block;
+            height: 100%;
+        }
+
+        .panel {
+            width: 103%;
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/Editor",
+            "esri/widgets/Expand",
+            "esri/widgets/Legend"
+        ],
+            function (WebMap, MapView, Editor, Expand, Legend) {
+
+                const webmap = new WebMap({
+                    portalItem: {
+                        id: "9cc5166c053b46379b88886aad0544b5"
+                    }
+                });
+
+                //set the view
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: webmap
+                });
+
+                //create an expand with a custom panel
+                var codeExpand = new Expand({
+                    expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+                    view: view,
+                    content: document.getElementById("sidepanel"),
+                    expanded: true
+                });
+
+                //add the panel to the UI
+                view.ui.add(codeExpand, "bottom-left");
+
+            });
+    </script>
+</head>
+
+<body class="calcite-theme-dark">
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">Show Related Records in Popup</h2>
+        </div>
+
+        <!-- content of page -->
+        <div id="bodywrapper">
+            <div id="sidepanel" class="panel">
+                <!-- HTML generated using hilite.me -->
+                <div
+                    style="background: #272822; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+                    <pre style="margin: 0; line-height: 125%">
+<span style="color: #9b9b9b">// Create empty fieldInfos and attributes</span>
+<span style="color: #f8f8f2">var fieldInfos = [];</span>
+<span style="color: #f8f8f2">var attributes = {};</span>
+
+<span style="color: #9b9b9b">// Get Related Records as FeatureSet</span>
+<span style="color: #f8f8f2;font-weight: lighter;">var departures =</span> <span style="color: #66d9ef">FeatureSetByRelationshipName</span><span style="color: #f8f8f2">($feature,</span> <span style="color: #a6e22e">&quot;Treinen&quot;</span><span style="color: #f8f8f2">);</span>
+
+<span style="color: #9b9b9b">// Loop through Features and add new fieldInfos and attributes</span>
+<span style="color: #f8f8f2"><b>for</b> (var departure <b>in</b> departures)<b>{</b></span>
+
+    <span style="color: #9b9b9b">// Get destination and frequence</span>
+    <span style="color: #f8f8f2">var destination = departure[</span><span style="color: #a6e22e;">&quot;Richting&quot;</span><span style="color: #f8f8f2">];</span>
+    <span style="color: #f8f8f2">var frequence = departure[</span><span style="color: #a6e22e;">&quot;Frequentie&quot;</span><span style="color: #f8f8f2">];</span>
+
+    <span style="color: #9b9b9b">// Add values to fieldInfos and attributes</span>
+    <span style="color: #66d9ef">Push</span><span style="color: #f8f8f2">(fieldInfos,{</span>
+        <span style="color: #f8f8f2">fieldName: destination</span>
+    <span style="color: #f8f8f2">});</span>
+    <span style="color: #f8f8f2">attributes[destination] = frequence <b>+</b></span> <span style="color: #a6e22e">&quot;x per uur&quot;</span><span style="color: #f8f8f2">;</span>
+<span style="color: #f8f8f2">}</span>
+
+<span style="color: #f8f8f2"><b>return</b> {</span>
+    <span style="color: #f8f8f2">type:</span> <span style="color: #a6e22e;">&#39;fields&#39;</span><span style="color: #f8f8f2">,</span>
+    <span style="color: #f8f8f2">title:</span> <span style="color: #a6e22e;">&#39;Vertrekrichtingen&#39;</span><span style="color: #f8f8f2">,</span>
+    <span style="color: #f8f8f2">fieldInfos: fieldInfos,</span>
+    <span style="color: #f8f8f2">attributes: attributes</span>
+<span style="color: #f8f8f2">}</span>
+</pre>
+                </div>
+
+
+            </div>
+            <div id="mapDiv"></div>
+
+
+        </div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
