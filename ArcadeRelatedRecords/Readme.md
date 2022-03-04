@@ -22,4 +22,6 @@ In the example below the Map shows a Feature Layer with all NS Intercity Station
 <br/>
 View this example live:
 [here](https://esrinederland.github.io/CoolMaps/ArcadeRelatedRecords)
-
+<br/>
+<br/>
+Or in the [MapViewer](https://www.arcgis.com/apps/mapviewer/index.html?webmap=9cc5166c053b46379b88886aad0544b5)
