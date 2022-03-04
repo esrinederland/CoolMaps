@@ -8,7 +8,7 @@ When a one-to-many relationship exists between Feature Layers in ArcGIS, you wan
 Within the MapViewer it is possible to create Popup Elements using Arcade expressions. In the Arcade Editor you can use one of the Templates to create a <i>Chart</i>, <i>Fields list</i>, or <i>Rich text</i> Element. 
 <br/>
 <br/>
-![Arcade Templates](../images/ArcadeRelatedRecords_1.png)
+![Arcade Templates](../images/ArcadeRelatedRecords_1.PNG)
 <br/>
 <br/>
 With the Arcade Function `FeatureSetByRelationshipName()` it is possible to retrieve all Related Records for the selected Feature. Using this FeatureSet the Fields in the <i>Fields list</i> can be created dynamically, adding one Field for each Related Record.
@@ -17,7 +17,7 @@ With the Arcade Function `FeatureSetByRelationshipName()` it is possible to retr
 In the example below the Map shows a Feature Layer with all NS Intercity Stations. This layer has a Related Table with information about the departure directions and corresponding frequence for each station. The Popup contains a <i>Fields list</i>, created with Arcade, showing the records from the Related Table. 
 <br/>
 <br/>
-![NS Intercity Stations](../images/ArcadeRelatedRecords_2.png)
+![NS Intercity Stations](../images/ArcadeRelatedRecords_2.PNG)
 <br/>
 <br/>
 View this example live:
