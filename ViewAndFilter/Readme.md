@@ -11,4 +11,4 @@ Also it can filter based on a geometry without querying the server.
 <br/>
 <br/>
 View this example live:
-[here](https://esrinederland.github.io/ViewAndFilter/index.html)
+[here](https://esrinederland.github.io/CoolMaps/ViewAndFilter/index.html)
