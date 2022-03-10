@@ -1,0 +1,10 @@
+[
+    {"name":"Blue and Red 10","colors":[ "#9e0142", "#d53e4f", "#f46d43", "#fdae61", "#fee08b", "#e6f598", "#abdda4", "#66c2a5", "#3288bd", "#5e4fa2"]},
+    {"name":"Flower Field","colors": [ "#e60049", "#0bb4ff", "#50e991", "#e6d800", "#9b19f5", "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0" ]},
+    {"name":"Fruit Basket", "colors" :[ "#1e8553", "#c44296", "#d9bf0d", "#d97f00", "#00b6f1", "#9933cc", "#3abf66", "#b9a087", "#96aedc", "#807b71" ]},
+    {"name":"Sunset Fade","colors": [ "#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6", "#00b7c7", "#5ad45a", "#8be04e", "#c5d96d", "#ebdc78" ]},
+    {"name":"Pastel Dreams","colors":[ "#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe", "#ffb55a", "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7", "#cbecc4" ]},
+    {"name":"Blue 6","colors":[ "#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#2f419e", "#152875", "#061b42" ]},
+    {"name":"Blue and Orange 2","colors": [ "#bf5b1d", "#d26d30", "#e48043", "#eb9b6a", "#f2b591", "#d6cdcd", "#9cbdd9", "#84a7c4", "#6c90ae", "#547a99" ]},
+    {"name":"Red 2","colors" : [ "#fffcd4", "#f6d6a5", "#f2c38e", "#e99e5f", "#e58b48", "#d4743c", "#b24625", "#a12f19", "#7f0101", "#660000" ]}
+]

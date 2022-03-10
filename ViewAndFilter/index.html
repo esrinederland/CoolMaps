@@ -1,0 +1,473 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>LayerView and filter
+    </title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        #rendererPanel {
+            display: none;
+        }
+
+        #filterPanel {
+            padding-top: 4px;
+            display: none;
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/Map", "esri/views/MapView", "esri/widgets/Expand", "esri/layers/FeatureLayer", "esri/Graphic", "esri/request", "esri/widgets/Legend",
+            "esri/layers/GraphicsLayer", "esri/widgets/Sketch/SketchViewModel", "esri/layers/support/FeatureFilter", "esri/geometry/geometryEngine", "esri/Graphic"
+
+        ], function (Map, MapView, Expand, FeatureLayer, Graphic, esriRequest, Legend,
+            GraphicsLayer, SketchViewModel, FeatureFilter, geometryEngine, Graphic) {
+
+            var fieldName = null;
+            var top10FieldValues = []
+            var fLayer = null;
+            var flView = null;
+            var serviceFl = null;
+
+            var map = new Map({
+                basemap: "topo-vector"
+            });
+
+            var view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.1, 52.5],
+                zoom: 8
+            });
+            
+            var legend = new Legend({
+                view: view,
+
+            });
+            var legendExpand = new Expand({ content: legend, view: view, expanded: true });
+
+            view.ui.add(legendExpand, "bottom-right");
+
+            var panel = document.getElementById("panel");
+            var panelExpand = new Expand({ content: panel, view: view, expanded: true });
+            var fieldSelect = document.getElementById("fieldSelect");
+            var rampSelect = document.getElementById("rampSelect");
+            var btnFilter = document.getElementById("btnFilter");
+            var btnClear = document.getElementById("btnClearFilter");
+            view.ui.add(panelExpand, "top-right")
+
+
+            //Data and Visualization
+            setColorRamps();
+            var btnGo = document.getElementById("btnGo");
+
+            btnGo.onclick = function () {
+                console.log("Let's go");
+                btnGo.style="display:none";
+                //monumenten
+                var url = "https://services.arcgis.com/nSZVuSZjHpEZZbRo/arcgis/rest/services/Rijksmonumenten/FeatureServer/0";
+                loaderStatus(true, "getting featurecount");
+
+                serviceFl = new FeatureLayer(url);
+
+                console.log("map", map);
+                console.log("view", view);
+                getAllDataFromFeatureLayer(serviceFl, view.spatialReference.wkid).then((result) => {
+
+                    console.log("got result", result);
+                    loaderStatus(true, "Received features: creating layer");
+
+                    console.log("fl", serviceFl);
+                    fLayer = new FeatureLayer({
+
+                        // create an instance of esri/layers/support/Field for each field object
+                        fields: serviceFl.fields,
+                        objectIdField: serviceFl.objectIdField, // inferred from fields array if not specified
+                        geometryType: serviceFl.geometryType, // geometryType and spatialReference are inferred from the first feature
+                        //   in the source array if they are not specified.
+                        spatialReference: view.spatialReference,
+                        source: [result[0]],  //  an array of graphics with geometry and attributes
+                        // popupTemplate and symbol are not required in each feature
+                        // since those are handled with the popupTemplate and
+                        // renderer properties of the layer
+                        popupTemplate: serviceFl.popupTemplate,
+                        // a default simple renderer will be applied if not set.
+                        renderer: serviceFl.renderer  // UniqueValueRenderer based on `type` attribute
+                    });
+                    map.add(fLayer);
+
+                    view.whenLayerView(fLayer).then(function (layerView) {
+                        flView = layerView;
+                    });
+
+                    loaderStatus(true, "Adding features to layer");
+                    fLayer.applyEdits({ addFeatures: result }).then(() => {
+                        loaderStatus(false, "")
+                        displayPanels(true);
+                    });
+                    serviceFl.fields.forEach((fld) => {
+                        console.log(fld);
+                        var opt = document.createElement('calcite-option');
+                        opt.value = fld.name;
+                        opt.innerHTML = `${fld.name} (${fld.type})`;
+                        fieldSelect.appendChild(opt);
+
+                    });
+
+
+                });
+
+            };
+
+            //fieldSelect.onchange = function (evt) {
+            fieldSelect.addEventListener("calciteSelectChange",(evt) =>{
+                console.log("fieldSelect:change", fieldSelect, evt);
+                fieldName = fieldSelect.value;
+                console.log("fieldName: ", fieldName);
+                console.log("lview: ", flView);
+
+
+                var query = serviceFl.createQuery();
+                query.groupByFieldsForStatistics = fieldName;
+                query.orderByFields = ["field_count DESC"];
+                query.outStatistics = [{
+                    onStatisticField: fieldName,
+                    outStatisticFieldName: "field_count",
+                    statisticType: "count"
+                }];
+                serviceFl.queryFeatures(query).then(function (response) {
+                    console.log("response", response)
+                    var nrofFieldValues = response.features.length;
+                    if (nrofFieldValues > 10) {
+                        nrofFieldValues = 10;
+                    }
+                    if (nrofFieldValues > 0) {
+                        top10FieldValues = [];
+                        for (var i = 0; i < nrofFieldValues; i++) {
+                            var fieldValue = response.features[i].attributes[fieldName];
+                            console.log("Adding: ", fieldValue);
+
+                            top10FieldValues.push(fieldValue);
+
+                        }
+                        updateRenderer();
+                    }
+                });
+
+
+            });
+            
+            rampSelect.addEventListener("calciteSelectChange",(evt) =>  {
+                console.log("rampSelect:change", rampSelect, evt);
+                updateRenderer();
+            });
+
+            function updateRenderer() {
+                //console.log("value", rampSelect.selectedOptions[0].value);
+                newRendererValue = rampSelect.value;
+                if (newRendererValue != "" && newRendererValue != "Choose a color ramp") {
+                    var uniqueValues = []
+                    //var colors = newRendererValue.split(",");
+                    var colors = newRendererValue;
+                    for (var i = 0; i < top10FieldValues.length; i++) {
+                        var fieldValue = top10FieldValues[i];
+                        var colorHex = colors[i];
+                        uniqueValues.push({
+                            value: fieldValue,
+                            symbol: {
+                                type: "simple-marker",
+                                outline: { width: 1 },
+                                color: colorHex
+                            }
+                        });
+                    }
+
+                    var renderer = {
+                        type: "unique-value",  // autocasts as new UniqueValueRenderer()
+                        field: fieldName,
+                        defaultSymbol: {
+                            type: "simple-marker",
+                            outline: { width: 1 },
+                            color: "#ECECEC"
+                        },  // autocasts as new SimpleFillSymbol()
+                        uniqueValueInfos: uniqueValues,
+
+                    };
+                    console.log("New renderer: ", renderer);
+                    fLayer.renderer = renderer;
+                }
+            }
+
+            function setColorRamps() {
+               
+                esriRequest("colorramps.json").then((response) => {
+                    console.log("color ramps:", response);
+
+
+                    response.data.forEach((ramp) => {
+                        console.log(ramp);
+                        var opt = document.createElement('calcite-option');
+                        opt.value = ramp.colors;
+                        opt.innerHTML = ramp.name;
+                        rampSelect.appendChild(opt);
+                    });
+                });
+
+            }
+            function loaderStatus(status, msg) {
+                var loader = document.getElementById("loader");
+                //document.getElementById("loaderText").innerHTML = msg;
+                loader.text = msg;
+                if (status) {
+                    //loader.classList.add("is-active");
+                    loader.active = status;
+
+                }
+                else {
+                    //loader.classList.remove("is-active");
+                    loader.active = status;
+                }
+
+            }
+            function getAllDataFromFeatureLayer(fLayer, outSrWkid) {
+                return new Promise(resolve => {
+                    // First, get the count of all features...
+                    fLayer.queryFeatureCount().then((resultCount) => {
+                        features = []
+                        loaderStatus(true, `featurecount ${resultCount}`);
+                        nrOfRequests = Math.ceil(resultCount / 1000)
+                        for (i = 0; i < nrOfRequests; i++) {
+                            j = 0
+
+                            var query = { num: 1000, start: i * 1000, returnGeometry: true, outSpatialReference: { wkid: outSrWkid }, outFields: "*" }
+                            fLayer.queryFeatures(query).then((resultFeatures) => {
+
+                                features = features.concat(resultFeatures.features)
+                                loaderStatus(true, `got features ${features.length} from ${resultCount}`)
+                                j = j + 1
+                                if (j === nrOfRequests) {
+                                    var newgraphics = features.map(f => new Graphic({ attributes: f.attributes, geometry: f.geometry }));
+                                    resolve(newgraphics);
+                                }
+                            });
+                        }
+                    })
+
+                })
+            };
+            function displayPanels(visible) {
+
+                document.getElementById("rendererPanel").style.display = "block";
+                document.getElementById("filterPanel").style.display = "block";
+            }
+            //Filter
+            let sketchLayer = new GraphicsLayer();
+            let bufferLayer = new GraphicsLayer();
+            view.map.addMany([bufferLayer, sketchLayer]);
+            btnFilter.onclick = function () {
+                sketchViewModel.create("polyline");
+            };
+            btnClear.onclick = function () {
+                clearFilter();
+            };
+            // use SketchViewModel to draw polygons that are used as a filter
+            let sketchGeometry = null;
+            let filterGeometry = null;
+            const sketchViewModel = new SketchViewModel({
+                layer: sketchLayer,
+                view: view,
+
+                polylineSymbol: {
+                    type: "simple-line",
+                    color: [211, 132, 80, 0.7],
+                    width: 3
+                },
+
+                polygonSymbol: {
+                    type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                    color: [227, 139, 79, 0.8],
+                    outline: {
+                        // autocasts as new SimpleLineSymbol()
+                        color: [255, 255, 255],
+                        width: 1
+                    }
+                },
+                defaultCreateOptions: { hasZ: false }
+            });
+
+            sketchViewModel.on(["create"], function (event) {
+                // update the filter every time the user finishes drawing the filtergeometry
+                console.log("sketchViewModel, create:", event.state)
+                //if (event.state == "complete") {
+                sketchGeometry = event.graphic.geometry;
+                updateFilter();
+                //}
+            });
+
+            sketchViewModel.on(["update"], function (event) {
+                const eventInfo = event.toolEventInfo;
+                // update the filter every time the user moves the filtergeometry
+                if (eventInfo && eventInfo.type.includes("move")) {
+                    if (eventInfo.type === "move-stop") {
+                        sketchGeometry = event.graphics[0].geometry;
+                        updateFilter();
+                    }
+                }
+                // update the filter every time the user changes the vertices of the filtergeometry
+                if (eventInfo && eventInfo.type.includes("reshape")) {
+                    if (eventInfo.type === "reshape-stop") {
+                        sketchGeometry = event.graphics[0].geometry;
+                        updateFilter();
+                    }
+                }
+            });
+
+            function updateFilter() {
+                var bufferGeometry = geometryEngine.geodesicBuffer(
+                    sketchGeometry,
+                    10000,
+                    "meters"
+                );
+                if (bufferLayer.graphics.length === 0) {
+                    bufferLayer.add(
+                        new Graphic({
+                            geometry: bufferGeometry,
+                            symbol: sketchViewModel.polygonSymbol
+                        })
+                    );
+                } else {
+                    bufferLayer.graphics.getItemAt(0).geometry = bufferGeometry;
+                }
+                filterGeometry = bufferGeometry;
+                //updateFilterGeometry();
+                console.log("Start updating filter");
+                featureFilter = {
+                    // autocasts to FeatureFilter
+                    geometry: filterGeometry,
+                    spatialRelationship: "intersects"
+                };
+
+                if (flView) {
+                    flView.filter = featureFilter;
+                }
+            }
+            function clearFilter() {
+                sketchGeometry = null;
+                sketchLayer.removeAll();
+                bufferLayer.removeAll();
+                if (flView) {
+                    flView.filter = null;
+                }
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">LayerView and Filter</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!--The panels that respond to the buttons, de data-panel-id corresponds to the data-action-id from the buttons-->
+        <calcite-panel heading="" height-scale="l" width-scale="m" data-panel-id="screenshot" id="panel">
+            <div id="container" class="info-container">
+                <div style="width: 100%; padding: 1rem; box-sizing: border-box;">
+                    <calcite-button appearance="clear" alignment="center" color="blue" scale="m" width="auto"
+                        calcite-hydrated="" id="btnGo">Start</calcite-button>
+                    <calcite-loader  label="Loading" scale="l" text="Loading" type="indeterminate"
+                        id="loader">
+                    </calcite-loader>
+                    <div id="rendererPanel">
+                        <calcite-select scale="m" id="fieldSelect">
+
+                            <calcite-option value="">Choose a field</calcite-option>
+                            </calcite-option-group>
+                        </calcite-select>
+                        <calcite-select scale="m" id="rampSelect">
+
+                            <calcite-option value="">Choose a color ramp</calcite-option>
+                            </calcite-option-group>
+                        </calcite-select>
+                    </div>
+                    <div id="filterPanel">
+                        <calcite-button alignment="center" color="blue" scale="m" width="auto" calcite-hydrated=""
+                            id="btnFilter">Start Filter</calcite-button>
+                        <calcite-button alignment="center" color="blue" scale="m" width="auto" calcite-hydrated=""
+                            id="btnClearFilter">Clear Filter</calcite-button>
+                    </div>
+                </div>
+            </div>
+
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
