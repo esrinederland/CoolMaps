@@ -95,7 +95,11 @@
                                 width: "3px"
                             }
                         };
-                        AddAction("SketchCreated");
+                        // only log to coolmonitor if sketch is complete
+                        if(evt.state=="complete")
+                        {
+                            AddAction("SketchCreated");
+                        }
                     }
                 })
 
