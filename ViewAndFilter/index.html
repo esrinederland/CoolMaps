@@ -176,6 +176,7 @@
 
             //fieldSelect.onchange = function (evt) {
             fieldSelect.addEventListener("calciteSelectChange",(evt) =>{
+                AddAction("NewFieldSelected");
                 console.log("fieldSelect:change", fieldSelect, evt);
                 fieldName = fieldSelect.value;
                 console.log("fieldName: ", fieldName);
@@ -214,6 +215,7 @@
             
             rampSelect.addEventListener("calciteSelectChange",(evt) =>  {
                 console.log("rampSelect:change", rampSelect, evt);
+                AddAction("NewColorSelected");
                 updateRenderer();
             });
 
@@ -320,9 +322,11 @@
             let bufferLayer = new GraphicsLayer();
             view.map.addMany([bufferLayer, sketchLayer]);
             btnFilter.onclick = function () {
+                AddAction("CreateFilter");
                 sketchViewModel.create("polyline");
             };
             btnClear.onclick = function () {
+                AddAction("ClearFilter");
                 clearFilter();
             };
             // use SketchViewModel to draw polygons that are used as a filter
