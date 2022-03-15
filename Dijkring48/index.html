@@ -144,7 +144,14 @@
 
           loaderStatus(true, "Loading layer");
           watchUtils.whenFalseOnce(layerView, "updating", function () {
+            
             loaderStatus(false, "Layer loaded");
+            //when the view is less than half the panel, collapse the panel (setting expanded to false)
+            var panelWidth = exp.content.clientWidth
+            if(view.width < (2*(panelWidth+55)))
+            {
+              exp.expanded = false;
+            }
             console.log("whenFalseOnce hooking event");
             //hook the event //click
 
