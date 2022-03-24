@@ -16,3 +16,12 @@ Use Topo RD Basemap Gallery in ArcGIS JS API App:
 <br>
 View this example live:
 [here](https://esrinederland.github.io/CoolMaps/JSAndTopoRD/BasemapGallery.html)
+
+---
+
+Use Multiple Coordinate Systems in a BaseMap Gallery since the ArcGIS API for JavaScript 4.23
+![The JS and Topo RD basemap gallery sample](../images/20220325_BasemapGallery.gif)
+<br>
+<br>
+View this example live:
+[here](https://esrinederland.github.io/CoolMaps/JSAndTopoRD/MultiCoordinateBasemapGallery.html)
