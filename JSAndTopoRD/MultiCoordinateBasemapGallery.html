@@ -1,0 +1,137 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: BasemapGallery with multiple coordinate systems</title>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.62/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "esri/widgets/BasemapGallery"
+        ],
+            function (Map, WebMap, MapView,
+                Expand, BasemapGallery) {
+
+                //get the map
+                const map = new Map({
+                    basemap: "topo-vector"
+                });
+
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    center: [6.1, 52.5],
+                    zoom: 6
+                });
+
+                //create basemap gallery with a group id
+                var basemapGallery = new BasemapGallery({
+                    view: view,
+                    source: {
+                        //GroupID with 102100 and 28992 basemaps
+                        query: "id:b7339cf5318444c1b7fe97a01e8cf9ae"
+                    }
+                });
+
+                //create an expand with the basemap Gallery
+                var basemapExpand = new Expand({
+                    view: view,
+                    content: basemapGallery,
+                    expanded: true
+                });
+
+                // Add the widget to the top-right corner of the view
+                view.ui.add(basemapExpand, {
+                    position: "top-right"
+                });
+                
+                view.when((view) => {
+
+                    view.watch("map.basemap.title", (evt) => {
+                        AddAction("SwitchBasemap", evt);
+                        console.log(evt);
+
+                    });
+                });
+            });
+    </script>
+</head>
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">CoolMaps: BasemapGallery with multiple coordinate systems</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+</html>
