@@ -1,0 +1,178 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: RouteLayer</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        #routePanel {
+            width: 450px
+        }
+        #routeContainer
+        {
+            padding:10px;
+        }
+    </style>
+    <script>
+        var esriConfig = { apiKey: "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l" }; //api key account: mvanhulzen_esrinl
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "esri/layers/RouteLayer",
+            "esri/rest/support/Stop"
+        ],
+            function (Map, WebMap, MapView,
+                Expand,
+                RouteLayer,
+                Stop) {
+
+                //get the map
+                const map = new Map({
+                    basemap: "arcgis-navigation"
+                });
+
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    center: [6.1, 52.5],
+                    zoom: 7
+                });
+
+                //create a route layer
+                // create new stops for start (Ontario) and end (Esri)
+                const defaultStop = new Stop({
+                    geometry: { x: 4.323844, y: 52.069397 },
+                    name: "Esri GIS Tech 2022"
+                })
+                const stops = [new Stop({ geometry: {} }), defaultStop];
+
+                var routeExpand = new Expand({
+                    view: view,
+                    content: document.getElementById("routePanel"),
+                    expandIconClass: "esri-icon-directions2",
+
+                    expanded: false
+                });
+                view.ui.add(routeExpand, "top-right");
+                // only stops are required
+                const routeLayer = new RouteLayer({
+                    stops: stops
+                });
+                map.add(routeLayer);
+
+                view.when((view) => {
+
+                    view.on("click", async (evt) => {
+                        console.log("click", evt);
+                        var newStart = new Stop({
+                            geometry: evt.mapPoint,
+                            name: "Vertrekpunt"
+                        });
+                        AddAction("new route start", JSON.stringify(evt.mapPoint.toJSON()));
+
+                        //set the stops
+                        routeLayer.stops = [newStart, defaultStop];
+
+                        const results = await routeLayer.solve();
+                       
+                        routeLayer.update(results);
+
+                        // Zoom to the extent of the solve route.
+                        view.goTo(routeLayer.routeInfo.geometry);
+                        var routeTable = "<table>";
+                        results.directionPoints.items.forEach(function (item) {
+                            console.log(item.objectId, item.displayText);
+                            routeTable += "<tr><td>" + item.objectId + "</td><td>" + item.displayText + "</td></tr>";
+                        });
+                        routeTable += "</table>";
+                        document.getElementById("routeContainer").innerHTML = routeTable;
+                        routeExpand.expanded=true;
+                        
+
+                    });
+                });
+            });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">CoolMaps: RouteLayer</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+    <calcite-panel id="routePanel" heading="Route Info to the Esri GIS Tech 2022:">
+        <div id="routeContainer">
+            No route yet, click on the map for a route to the Esri GIS Tech 2022.
+        </div>
+    </calcite-panel>
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
