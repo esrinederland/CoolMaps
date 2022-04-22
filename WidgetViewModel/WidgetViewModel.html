@@ -1,0 +1,246 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: Widget ViewModel</title>
+
+    <script
+    src="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.esm.js"
+    type="module"
+  ></script>
+  <link
+    rel="stylesheet"
+    href="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.css"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://js.arcgis.com/4.23/@arcgis/core/assets/esri/themes/light/main.css"
+  />
+  <script type="module">
+    import WebMap from "https://js.arcgis.com/4.23/@arcgis/core/WebMap.js";
+    import MapView from "https://js.arcgis.com/4.23/@arcgis/core/views/MapView.js";
+    import DistanceMeasurement2DViewModel from "https://js.arcgis.com/4.23/@arcgis/core/widgets/DistanceMeasurement2D/DistanceMeasurement2DViewModel.js";
+    import DistanceMeasurement2D from "https://js.arcgis.com/4.23/@arcgis/core/widgets/DistanceMeasurement2D.js";
+    import Expand from "https://js.arcgis.com/4.23/@arcgis/core/widgets/Expand.js";
+    const webmapId =
+      new URLSearchParams(window.location.search).get("webmap") ??
+      "9f1eb65129e24b64a84a374e25cb522f";
+  
+    const map = new WebMap({
+      portalItem: {
+        id: webmapId,
+      },
+    });
+  
+    const view = new MapView({
+      map,
+      container: "mapDiv"
+    });
+    
+    const distanceMeasurement2D = new DistanceMeasurement2D({
+      view: view
+    })
+  
+    var origExpand = new Expand({content:distanceMeasurement2D, expanded:true});
+    view.ui.add(origExpand, "top-right")
+
+    var newExpand = new Expand({content:document.getElementById("measurementPanel"), expanded:true});
+    view.ui.add(newExpand, "top-left")
+    view.ui.move("zoom", "bottom-right");
+  
+    const distanceMeasurementViewModel = new DistanceMeasurement2DViewModel({
+      view,
+      unit: "meters"
+    });
+  
+    distanceMeasurementViewModel.watch("measurementLabel", (value) => {
+      if(value)
+      {
+        document.getElementById("measurement-distance-length").innerHTML = value
+      }
+      else {
+        document.getElementById("measurement-distance-length").innerHTML = '0'
+      }
+    })
+    document.getElementById("measurement-distance-units").innerHTML = distanceMeasurementViewModel.unit
+  
+  
+  
+    window.startMeasurement = () => {
+      console.log("Start distance measurement")
+      distanceMeasurementViewModel.start()
+    }
+  
+    window.stopMeasurement = () => {
+      console.log("Stop distance measurement")
+      distanceMeasurementViewModel.clear()
+      document.getElementById("measurement-distance-length").innerHTML = '0'
+    }
+  
+    window.resetMeasurement = () => {
+      console.log("Reset distance measurement")
+      distanceMeasurementViewModel.clear()
+      distanceMeasurementViewModel.start()
+      document.getElementById("measurement-distance-length").innerHTML = '0'
+    }
+   
+  
+    
+  
+    map.when(() => {
+      let activeWidget;
+  
+      const handleActionBarClick = ({ target }) => {
+        if (target.tagName !== "CALCITE-ACTION") {
+          return;
+        }
+  
+        if (activeWidget) {
+          document.querySelector(
+            `[data-action-id=${activeWidget}]`
+          ).active = false;
+          document.querySelector(
+            `[data-panel-id=${activeWidget}]`
+          ).hidden = true;
+        }
+  
+        const nextWidget = target.dataset.actionId;
+        if (nextWidget !== activeWidget) {
+          document.querySelector(
+            `[data-action-id=${nextWidget}]`
+          ).active = true;
+          document.querySelector(
+            `[data-panel-id=${nextWidget}]`
+          ).hidden = false;
+          activeWidget = nextWidget;
+        } else {
+          activeWidget = null;
+        }
+      };
+  
+      document
+        .querySelector("calcite-action-bar")
+        .addEventListener("click", handleActionBarClick);
+  
+      
+    });
+  
+  </script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        #measurementPanel {
+            width: 350px
+        }
+ 
+    </style>
+   
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">CoolMaps: Widget ViewModel</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+    <calcite-panel
+          heading="Afstand meten"
+          height-scale="l"
+          data-panel-id="measurement"
+          id="measurementPanel"
+        >
+          <calcite-button
+            width="full"
+            slot="footer-actions"
+            appearance="outline"
+            onclick="stopMeasurement()"
+            >Stop</calcite-button
+          >
+          <calcite-button
+            width="full"
+            slot="footer-actions"
+            appearance="outline"
+            onclick="resetMeasurement()"
+            >Reset</calcite-button
+          >
+          <calcite-button 
+            width="full" 
+            slot="footer-actions" 
+            onclick="startMeasurement()"
+            >Start meting</calcite-button
+          >
+            <div style="padding: 10px">
+            <p> 
+              Gemeten Afstand
+              <br />
+              <strong><span id="measurement-distance-length">0</span></strong>
+            </p>
+            <p>
+              Eenheden:<br />
+              <strong><span id="measurement-distance-units"></span></strong>
+            </p>
+          </div>
+        </calcite-panel>
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
