@@ -1,0 +1,175 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>Where Am I
+    </title>
+    <link rel="stylesheet" href="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.css" />
+    <script src="https://js.arcgis.com/calcite-components/1.0.0-beta.77/calcite.js" type=module></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-border-3);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: #D83020;
+            font-family: serif;
+            font-weight: bold;
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+        var esriConfig = {
+            apiKey: "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l"
+        };
+
+
+        require([
+            "esri/Map", "esri/views/MapView", "esri/Graphic", "esri/widgets/Expand", "esri/rest/locator"
+
+        ], function (Map, MapView, Graphic, Expand, locator) {
+
+            const locatorUrl = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer";
+            var map = new Map({
+                basemap: "arcgis-newspaper"
+            });
+
+            var view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.1, 52.5],
+                zoom: 13
+            });
+
+            var panel = document.getElementById("panel");
+            var panelExpand = new Expand({ content: panel, view: view, expanded: true });
+            view.ui.add(panelExpand, "top-right");
+
+            view.when(() => {
+
+                view.on("click", async (evt) => {
+                    console.log("view clicked:", evt);
+
+                    var result = await locator.locationToAddress(locatorUrl, { location: evt.mapPoint });
+                    console.log(result);
+
+                    var address = result.attributes.LongLabel.replaceAll(", ", ",\n");//ddress;
+                    var addressGraphic = new Graphic({
+                        geometry: evt.mapPoint,
+                        symbol: {
+                            type: "text",  // autocasts as new TextSymbol()
+                            color: "#D83020",
+                            haloColor: "white",
+                            haloSize: "1px",
+                            horizontalAlignment: "left",
+                            verticalAlignment: "bottom",
+                            text: address,
+                            xoffset: 3,
+                            yoffset: 3,
+                            font: {  // autocasts as new Font()
+                                size: 12,
+                                family: "serif",
+                                weight: "bold"
+                            }
+                        }
+                    });
+
+                    var clickedDot = new Graphic({
+                        geometry:evt.mapPoint,
+                        symbol:{
+                            type:"simple-marker",
+                            color:"#D83020",
+                            size:5,
+                            outline:{
+                                color:"white",
+                                width:1
+                            }
+
+                        }
+                    })
+                    view.graphics.removeAll();
+                    view.graphics.addMany([addressGraphic,clickedDot]);
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">CoolMaps: Where Am I</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <!--The panels that respond to the buttons, de data-panel-id corresponds to the data-action-id from the buttons-->
+        <calcite-panel heading="" height-scale="l" width-scale="m" data-panel-id="screenshot" id="panel">
+            <div id="container" class="info-container">
+                <div style="width: 100%; padding: 1rem; box-sizing: border-box;font-family: serif;">
+                    Click in the map to see the address of the clicked location.
+                    <br/><br/>
+                    For more information on (reverse) geocoding see: <a href="https://developers.arcgis.com/documentation/mapping-apis-and-services/search/reverse-geocoding/">developers.arcgis.com</a>
+                    
+                </div>
+            </div>
+
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
