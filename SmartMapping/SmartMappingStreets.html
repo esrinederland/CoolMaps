@@ -1,0 +1,274 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: SmartMapping</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        #infoDiv {
+            padding: 8px;
+        }
+    </style>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/smartMapping/renderers/type",
+            "esri/widgets/Legend",
+            "esri/core/watchUtils",
+            "esri/widgets/Expand",
+            "esri/widgets/Search"
+        ], (
+            Map,
+            MapView,
+            FeatureLayer,
+            typeRendererCreator,
+            Legend,
+            watchUtils,
+            Expand,
+            Search
+        ) => {
+            let numClassesInput, buttonApply;
+
+            // Get BAG layer with Adressen
+            const layer = new FeatureLayer({
+                url: "https://basisregistraties.arcgisonline.nl/arcgis/rest/services/BAG/BAGv3/FeatureServer/0",
+                minScale: 0,
+                maxScale: 0,
+                title: "Straatnaam",
+                popupTemplate: {
+                    title: "{openbareruimtenaam}"
+                }
+            });
+
+            // Create Map and MapView
+            const map = new Map({
+                basemap: "gray-vector",
+                layers: [layer]
+            });
+            const view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.11, 52.49],
+                zoom: 14
+            });
+
+            // Set up UI elements
+            var legendExpand = new Expand({
+                view: view, content: new Legend({
+                    view: view
+                }), expanded: true
+            })
+            view.ui.add(legendExpand
+                ,
+                "bottom-left"
+            );
+            var search = new Search({ view: view });
+            var searchExpand = new Expand({
+                view: view, content: search, expanded: false,
+                group: "top-right"
+            });
+            view.ui.add(searchExpand
+                ,
+                "top-right"
+            );
+            // const expand = new Expand({
+            //   view: view,
+            //   content: bg
+            // });
+            // view.ui.add(expand, "top-right");
+
+            // view.ui.add("infoDiv", "top-right");
+
+            var infoExpand = new Expand({
+                view: view,
+                content: document.getElementById("info-panel"),
+                expandIconClass: "esri-icon-notice-round",
+                expanded: true,
+                group: "top-right"
+            });
+            view.ui.add(infoExpand, "top-right");
+            //create an expand with a custom panel
+            var codeExpand = new Expand({
+                expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+                view: view,
+                content: document.getElementById("codepanel"),
+                expanded: false
+            });
+
+            //add the panel to the UI
+            view.ui.add(codeExpand, "bottom-right");
+
+            setDisabled(true);
+            // Generate a new renderer each time the user clicks the apply button, or when the view is updated
+            view.when().then(() => {
+                numClassesInput = document.getElementById("num-classes");
+
+                buttonApply = document.getElementById("apply-renderer");
+                buttonApply.addEventListener("click", () => {
+                    params = {}
+                    params.center = view.center;
+                    params.zoomLevel = view.zoom;
+                    params.numLetters = numClassesInput.value;
+                    AddAction("GenerateSmartMapping", JSON.stringify(params));
+                    generateRenderer();
+                });
+
+                watchUtils.whenFalseOnce(view, "updating", generateRenderer);
+            });
+
+            view.watch("updating", (isUpdating) => {
+                console.log('viewUpdating:', isUpdating);
+                setDisabled(isUpdating);
+            });
+            function setDisabled(isDisabled) {
+                buttonApply = document.getElementById("apply-renderer");
+                buttonApply.disabled = isDisabled;
+                buttonApply.loading = isDisabled;
+
+            }
+
+            // Function to generate a new Type Renderer for the current View and num-classes 
+            function generateRenderer() {
+                setDisabled(true);
+                let typeParams = {
+                    layer: layer,
+                    view: view,
+                    valueExpression: "Right($feature.openbareruimtenaam," + numClassesInput.value + ");",
+                    valueExpressionTitle: "Laatste " + numClassesInput.value + " karakters",
+                    sizeOptimizationEnabled: true
+                };
+
+                // When the promise resolves, apply the visual variables to the renderer
+                typeRendererCreator.createRenderer(typeParams)
+                    .then(function (response) {
+                        layer.renderer = response.renderer;
+                        setDisabled(false);
+                        if (!map.layers.includes(layer)) {
+                            map.add(layer);
+                        }
+                    });
+            }
+        });
+    </script>
+</head>
+
+</html>
+
+
+
+<body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps: SmartMapping</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+        <calcite-panel heading="Smart Mapping" height-scale="l" width-scale="m" data-panel-id="info" id="info-panel"
+            style="width:420px;">
+            <div id="info-container" class="info-container" style="padding: 1rem;width:420px;">
+                <p>
+                    Pan naar een gebied naar keuze en kies het aantal karakters waarop de Renderer gebaseerd moet
+                    worden.
+                    Klik op <i>Toepassen</i> om het effect te zien.
+                </p>
+                <p>
+                    Gebruik laatste
+                    <input type="number" id="num-classes" class="esri-input" value="4" min="2" max="6" />
+                    karakters van straatnaam
+                </p>
+                <p>
+                    <calcite-button id="apply-renderer" scale="s" width="full" class="esri-button">
+                        Toepassen
+                    </calcite-button>
+                </p>
+
+            </div>
+        </calcite-panel>
+        <calcite-panel heading="SmartMapping code sample" height-scale="l" width-scale="m" data-panel-id="info" id="codepanel"
+            style="width:420px;">
+            <div class="info-container" style="padding: 1rem;width:420px;">
+                <!-- HTML generated using hilite.me -->
+                <div
+                    style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+                    <pre style="margin: 0; line-height: 125%"><span style="color: #008800; font-weight: bold">let</span> typeParams <span style="color: #333333">=</span> {
+    layer<span style="color: #333333">:</span> layer,
+    view<span style="color: #333333">:</span> view,
+    valueExpression<span style="color: #333333">:</span> <span style="background-color: #fff0f0">&quot;Right($feature.openbareruimtenaam,&quot;</span> <span style="color: #333333">+</span> numClassesInput.value <span style="color: #333333">+</span> <span style="background-color: #fff0f0">&quot;);&quot;</span>,
+    valueExpressionTitle<span style="color: #333333">:</span> <span style="background-color: #fff0f0">&quot;Laatste &quot;</span> <span style="color: #333333">+</span> numClassesInput.value <span style="color: #333333">+</span> <span style="background-color: #fff0f0">&quot; karakters&quot;</span>,
+    sizeOptimizationEnabled<span style="color: #333333">:</span> <span style="color: #008800; font-weight: bold">true</span>
+};
+
+<span style="color: #888888">// When the promise resolves, apply the visual variables to the renderer</span>
+typeRendererCreator.createRenderer(typeParams)
+    .then(<span style="color: #008800; font-weight: bold">function</span> (response) {
+        layer.renderer <span style="color: #333333">=</span> response.renderer;
+</pre>
+                </div>
+
+            </div>
+        </calcite-panel>
+
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
