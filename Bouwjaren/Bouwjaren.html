@@ -1,3 +1,5 @@
+
+<!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
@@ -8,7 +10,24 @@
     <title>
       Bouwjarenkaart Nederland
     </title>
+	
+	<meta name="description" content="Een kaart die de bouwjaren in Nederland visualiseert" />
 
+  <!-- OpenGraph Meta Tags -->
+	<meta property="og:description" content="Een kaart die de bouwjaren in Nederland visualiseert" />
+	<meta property="og:title" content="Bouwjarenkaart Nederland" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://bouwjarenkaart.nl/" />
+  <meta property="og:image" content="https://bouwjarenkaart.nl/thumbnail.png">
+
+  <!-- Twitter Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="twitter:domain" content="bouwjarenkaart.nl">
+  <meta property="twitter:url" content="https://bouwjarenkaart.nl/">
+  <meta name="twitter:title" content="Bouwjarenkaart Nederland">
+  <meta name="twitter:description" content="Een kaart die de bouwjaren in Nederland visualiseert">
+  <meta name="twitter:image" content="https://bouwjarenkaart.nl/thumbnail.png">
+  
     <link
       rel="stylesheet"
       href="https://js.arcgis.com/4.22/esri/themes/dark/main.css"
@@ -43,7 +62,7 @@
         //
         //--------------------------------------------------------------------------
         var layer = new FeatureLayer({
-            url: "https://test.arcgisonline.nl/arcgis/rest/services/BAG/BAGv3/FeatureServer/4",
+            url: "https://basisregistraties.arcgisonline.nl/arcgis/rest/services/BAG/BAGv3/FeatureServer/4",
             title: "Gebouwen",
             minScale: 300000,
             effect: "bloom(2.5 0 0.5)"
@@ -570,5 +589,6 @@
         </div>
       </div>
     </div>
+	<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
   </body>
 </html>
