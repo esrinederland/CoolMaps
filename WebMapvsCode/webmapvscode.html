@@ -1,0 +1,370 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: WebMp vs Code</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.80/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+     
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .mapdiv {
+            height: 100%;
+            width: 49.9%;
+            padding: 0;
+            margin: 0;
+        }
+
+        #mapDivWebMap {
+            float: right;
+        }
+
+        #mapDivCode {
+            float: left;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+            /*on a black theme change the logo*/
+            .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        #infoDiv {
+            padding: 8px;
+        }
+    </style>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/VectorTileLayer",
+            "esri/core/Collection",
+            "esri/Basemap",
+            "esri/geometry/Extent",
+            "esri/layers/FeatureLayer",
+
+            "esri/WebMap"
+        ], (
+            Map,
+            MapView,
+            VectorTileLayer,
+            Collection,
+            Basemap,
+            Extent,
+            FeatureLayer,
+
+            WebMap
+
+        ) => {
+
+            /************************************************************
+            * Create basmap, featurelayer, renderer and map and add it to the view
+            ************************************************************/
+            var layer = new VectorTileLayer({
+                url: "https://www.arcgis.com/sharing/rest/content/items/dea66a67f205435fa2a8c13cc71ba024/resources/styles/root.json",
+                
+                opacity: 0.5
+            });
+
+            var baselayers = new Collection([layer]);
+            var basemap = new Basemap({ baseLayers: baselayers });
+
+            var cbRenderer = {
+                type: "class-breaks",
+
+                field: "Bouwjaar",
+                classBreakInfos: [
+                    {
+                        minValue: 0,
+                        maxValue: 1658,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [255, 255, 217, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1685"
+                    },
+                    {
+                        minValue: 1659,
+                        maxValue: 1850,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [244, 250, 193, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1850"
+                    },
+                    {
+                        minValue: 1851,
+                        maxValue: 1900,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [229, 245, 177, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1900"
+                    },
+                    {
+                        minValue: 1901,
+                        maxValue: 1930,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [206, 236, 179, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1930"
+                    },
+                    {
+                        minValue: 1931,
+                        maxValue: 1945,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [170, 221, 182, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1945"
+                    },
+                    {
+                        minValue: 1946,
+                        maxValue: 1960,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [127, 205, 187, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1960"
+                    },
+                    {
+                        minValue: 1961,
+                        maxValue: 1975,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [89, 191, 192, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1975"
+                    },
+                    {
+                        minValue: 1976,
+                        maxValue: 1985,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [57, 174, 195, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1985"
+                    },
+                    {
+                        minValue: 1986,
+                        maxValue: 1995,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [36, 152, 192, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤1995"
+                    },
+                    {
+                        minValue: 1996,
+                        maxValue: 2005,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [31, 124, 182, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: "≤2005"
+                    },
+                    {
+                        minValue: 2006,
+                        maxValue: 9999,
+                        symbol:
+                        {
+                            type: "simple-fill",
+                            style: "solid",
+                            color: [34, 94, 168, 255],
+                            outline: {
+                                color: [0, 0, 0, 0],
+                                width: 0
+                            }
+                        },
+                        label: ">2005"
+                    }
+                ]
+            };
+
+            var featureLayer = new FeatureLayer({
+                // URL to the service
+                url: "https://services.arcgis.com/emS4w7iyWEQiulAb/arcgis/rest/services/BAGPandZwolleCentrum/FeatureServer/0"
+                , renderer: cbRenderer
+            });
+
+            var map = new Map({
+                basemap: basemap
+            });
+            map.add(featureLayer);
+
+            var viewOptions = {
+                map: map,
+                extent: new Extent({
+                    xmin: 201962,
+                    ymin: 501949,
+                    xmax: 203991,
+                    ymax: 504057,
+                    spatialReference: {
+                        wkid: 28992
+                    }
+                })
+            };
+
+            var viewJS = new MapView(viewOptions);
+            const viewCode = new MapView(viewOptions);
+            viewCode.container = "mapDivCode";
+
+            viewCode.ui.add(document.getElementById("info-panel-code"), "top-right");
+
+            /************************************************************
+            * Create a webmap and display int in the view
+            ************************************************************/
+            var viewWebMap = new MapView({
+                map: new WebMap({
+                    portalItem: {
+                        id: "4235e5fcf30940feb8c362f35779ceac"
+                    }
+                }),
+                container: "mapDivWebMap"
+            });
+
+            viewWebMap.ui.add("info-panel-webmap", "top-right");
+        });
+    </script>
+</head>
+
+</html>
+
+<body class="calcite-theme-dark">
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps: Webmap vs Code</h2>
+        </div>
+
+        <div id="mapDivCode" class="mapdiv"></div>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel-code">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                This map was configured through code.
+            </div>
+        </calcite-panel>
+        <div id="mapDivWebMap" class="mapdiv"></div>
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel-webmap">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                This map was configured through a WebMap.
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
