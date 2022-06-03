@@ -58,10 +58,10 @@
       //
       //--------------------------------------------------------------------------
 
-      var startx = parseFloat(getGetParamOrDefault("x",6.1));
-      var starty = parseFloat(getGetParamOrDefault("y",52.5));
-      var startzoom = parseInt(getGetParamOrDefault("zoom",12));
-      var startyear = parseInt(getGetParamOrDefault("year",1984));
+      var startx = parseFloat(getGetParamOrDefault("x", 6.1));
+      var starty = parseFloat(getGetParamOrDefault("y", 52.5));
+      var startzoom = parseInt(getGetParamOrDefault("zoom", 12));
+      var startyear = parseInt(getGetParamOrDefault("year", 1984));
 
       var layer = new FeatureLayer({
         url: "https://basisregistraties.arcgisonline.nl/arcgis/rest/services/BAG/BAGv3/FeatureServer/4",
@@ -95,17 +95,7 @@
         resizeAlign: "top-left"
       });
 
-      const searchWidget = new Search({
-        view: view
-      });
-      const searchExpand = new Expand({
-        content: searchWidget,
-        expanded: false
-      })
-      // Add the search widget to the top right corner of the view
-      view.ui.add(searchExpand, {
-        position: "top-right"
-      });
+
 
       //--------------------------------------------------------------------------
       //
@@ -149,6 +139,34 @@
         }
       });
 
+      const searchWidget = new Search({
+        view: view
+      });
+      const searchExpand = new Expand({
+        content: searchWidget,
+        expanded: false
+      })
+      // Add the search widget to the top right corner of the view
+      view.ui.add(searchExpand, {
+        position: "top-right"
+      });
+      view.ui.add(
+        new Fullscreen({
+          view: view,
+          element: applicationDiv
+        }),
+        "top-right"
+      );
+
+      const shareExpand = new Expand({
+        content: document.getElementById("sharepanel"),
+        expanded: true,
+        expandIconClass: "esri-icon-share"
+      })
+      view.ui.add(shareExpand, {
+        position: "top-right"
+      })
+
       view.ui.empty("top-left");
       view.ui.add(titleDiv, "top-left");
       view.ui.add(
@@ -168,13 +186,8 @@
       view.ui.add(legendExpand,
         "bottom-left"
       );
-      view.ui.add(
-        new Fullscreen({
-          view: view,
-          element: applicationDiv
-        }),
-        "top-right"
-      );
+
+
 
       // When the layerview is available, setup hovering interactivity
       view.whenLayerView(layer).then(setupHoverTooltip);
@@ -196,7 +209,8 @@
         view.watch("extent", function (nexExtent) {
           if (view.updating) {
             stopAnimation()
-          }});
+          }
+        });
         view.watch("center", function (nexCenter) {
           //console.log(nexExtent);
           setGetParam("x", view.center.longitude)
@@ -234,15 +248,12 @@
           window.history.pushState({ path: newUrl }, '', newUrl);
         }
       }
-      function getGetParamOrDefault(key,defaultValue)
-      {
+      function getGetParamOrDefault(key, defaultValue) {
         var params = new URLSearchParams(window.location.search);
-        if(params.has(key))
-        {
+        if (params.has(key)) {
           return params.get(key);
         }
-        else
-        {
+        else {
           return defaultValue;
         }
       }
@@ -255,9 +266,8 @@
         slider.viewModel.setValue(0, newValue);
         layer.renderer = createRenderer(newValue);
         //don't set the default startyear in the url because it doesn't look pretty and it is not needed
-        if(value != startyear)
-        {
-        setGetParam("year", newValue);
+        if (value != startyear) {
+          setGetParam("year", newValue);
         }
       }
 
@@ -632,8 +642,24 @@
       overflow: hidden
     }
 
+    .share-panel
+    {
+      padding:12px 15px;
+      width:450px !important;
+    }
+    .share-button
+      {
+        width:100px;
+        height:30px;
+        text-decoration: none;
+        display: inline-flex;
+      }
+      .share-social-icon {
+        height: 20px;
+        width: 20px;
+      }
     @media only screen and (max-width: 545px) {
-      
+
       .togglebuttontext {
         display: none;
       }
@@ -651,6 +677,8 @@
       .esri-slider__max {
         display: none;
       }
+
+      
     }
   </style>
 </head>
@@ -676,6 +704,42 @@
         </div>
       </div>
     </div>
+  </div>
+  <div id="sharepanel" class="esri-widget esri-widget--panel share-panel">
+    <div>Deel deze stand van de bouwjarenkaart.nl met iemand:</div>
+    <div>
+      <a href="asd" class="esri-button share-button">
+        <span class="share-social-name">Twitter</span>
+        <span class="share-social-icon">
+           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+            width="100%" height="100%" viewBox="0 0 56.693 56.693">
+            <title>Twitter</title>
+            <path fill="currentColor" stroke-width="0"
+              d="M54.082,15.5495c-1.8115,0.8047-3.7597,1.3477-5.8051,1.5913c2.0874-1.25,3.6894-3.2305,4.4443-5.5918 c-1.9531,1.1587-4.1152,2-6.418,2.4536c-1.8432-1.9643-4.4702-3.1919-7.3769-3.1919c-5.5816,0-10.1069,4.5254-10.1069,10.107 c0,0.792,0.0893,1.563,0.2617,2.3027c-8.3999-0.4209-15.8477-4.4443-20.8325-10.5596c-0.8697,1.4922-1.3682,3.2281-1.3682,5.0811 c0,3.5063,1.7842,6.5996,4.4961,8.4126c-1.6563-0.0532-3.2154-0.5073-4.5777-1.2647c-0.0009,0.042-0.0009,0.0845-0.0009,0.128 c0,4.896,3.4839,8.9809,8.1079,9.9101c-0.8482,0.2305-1.7412,0.3545-2.6631,0.3545c-0.6519,0-1.2847-0.063-1.9019-0.1816 c1.2867,4.0151,5.0191,6.9375,9.441,7.019c-3.459,2.711-7.8165,4.3267-12.5523,4.3267c-0.8154,0-1.6196-0.0484-2.4106-0.1411 c4.4736,2.8681,9.7856,4.541,15.4931,4.541c18.5908,0,28.7559-15.4009,28.7559-28.7569c0-0.4375-0.0088-0.8745-0.0283-1.3076 C51.0137,19.3571,52.728,17.5769,54.082,15.5495z">
+            </path>
+
+          </svg>
+        </span>
+      </a>
+      <a href="asd" class="esri-button share-button">
+        <span class="share-social-name">Facebook</span>
+        <span class="share-social-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 56.693 56.693" enable-background="new 0 0 56.693 56.693" xml:space="preserve" role="img"><title>Facebook</title><path fill="currentColor" stroke-width="0" d="M40.43,21.739h-7.645v-5.014c0-1.883,1.248-2.322,2.127-2.322c0.877,0,5.395,0,5.395,0V6.125l-7.43-0.029 c-8.248,0-10.125,6.174-10.125,10.125v5.518h-4.77v8.53h4.77c0,10.947,0,24.137,0,24.137h10.033c0,0,0-13.32,0-24.137h6.77 L40.43,21.739z"></path></svg>
+        </span>
+        </a>
+        <a href="asd" class="esri-button share-button">
+          <span class="share-social-name">LinkedIn</span>
+          <span class="share-social-icon">
+            <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve" role="img"><title>LinkedIn</title><path fill="currentColor" stroke-width="0" d="M30.7,0H1.3C0.6,0,0,0.6,0,1.3v29.3C0,31.4,0.6,32,1.3,32h29.3c0.7,0,1.3-0.6,1.3-1.3V1.3 C32,0.6,31.4,0,30.7,0z M9.5,27.3H4.7V12h4.8V27.3z M7.1,9.9c-1.5,0-2.8-1.2-2.8-2.8c0-1.5,1.2-2.8,2.8-2.8c1.5,0,2.8,1.2,2.8,2.8 C9.9,8.7,8.6,9.9,7.1,9.9z M27.3,27.3h-4.7v-7.4c0-1.8,0-4-2.5-4c-2.5,0-2.8,1.9-2.8,3.9v7.6h-4.7V12H17v2.1h0.1 c0.6-1.2,2.2-2.5,4.5-2.5c4.8,0,5.7,3.2,5.7,7.3V27.3z"></path></svg>
+            </span>
+          </a>
+          <a href="asd" class="esri-button share-button">
+            <span class="share-social-name">E-mail</span>
+            <span class="share-social-icon"></span>
+            </a>
+    </div>
+
+    <div>url: hier</div>
   </div>
   <script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </body>
