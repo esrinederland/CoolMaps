@@ -76,7 +76,7 @@
             id: "4f2e99ba65e34bb8af49733d9778fb8e"
           }
         },
-        layers: [layer]
+        //layers: [layer]
       });
 
       const view = new MapView({
@@ -204,6 +204,7 @@
 
       view.when(function () {
         console.log("View ready");
+        updateShareUrls(window.location.toString());
         handleWidthChange();
         // Stop the animation when moving.
         view.watch("extent", function (nexExtent) {
@@ -241,12 +242,14 @@
 
       }
       function setGetParam(key, value) {
-        if (history.pushState) {
-          var params = new URLSearchParams(window.location.search);
+        var params = new URLSearchParams(window.location.search);
           params.set(key, value);
           var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params.toString();
+          
+        if (history.pushState) {
           window.history.pushState({ path: newUrl }, '', newUrl);
         }
+        updateShareUrls(newUrl);
       }
       function getGetParamOrDefault(key, defaultValue) {
         var params = new URLSearchParams(window.location.search);
@@ -269,6 +272,17 @@
         if (value != startyear) {
           setGetParam("year", newValue);
         }
+      }
+
+      function updateShareUrls(newUrl)
+      {
+        var text = "Bouwjarenkaart Nederland: "
+        document.getElementById("link-twitter").href="https://twitter.com/intent/tweet?text=" + text + "&url=" + encodeURI(newUrl) + "&hashtags=bouwjarenkaart,ArcGIS"
+        document.getElementById("link-facebook").href="https://www.facebook.com/sharer/sharer.php?u=" + newUrl
+        document.getElementById("link-linkedin").href="https://www.linkedin.com/sharing/share-offsite/?url=" + newUrl
+        document.getElementById("link-email").href="mailto:?subject=" + text + "&body=" + encodeURI(newUrl)
+
+        document.getElementById("txtUrl").value = newUrl
       }
 
       /**
@@ -642,22 +656,29 @@
       overflow: hidden
     }
 
-    .share-panel
-    {
-      padding:12px 15px;
-      width:450px !important;
+    .share-panel {
+      padding: 12px 15px;
+      width: 450px !important;
     }
-    .share-button
-      {
-        width:100px;
-        height:30px;
-        text-decoration: none;
-        display: inline-flex;
-      }
-      .share-social-icon {
-        height: 20px;
-        width: 20px;
-      }
+
+    .share-button {
+      width: 100px;
+      height: 30px;
+      text-decoration: none;
+      display: inline-flex;
+    }
+
+    .share-social-icon {
+      margin-left: 5px;
+      height: 20px;
+      width: 20px;
+    }
+    #shareButtonPanel
+    {
+      margin-top:5px;
+      margin-bottom:5px;
+    }
+
     @media only screen and (max-width: 545px) {
 
       .togglebuttontext {
@@ -677,8 +698,11 @@
       .esri-slider__max {
         display: none;
       }
+      .share-button
+      {
+        margin-top:4px;
+      }
 
-      
     }
   </style>
 </head>
@@ -706,12 +730,13 @@
     </div>
   </div>
   <div id="sharepanel" class="esri-widget esri-widget--panel share-panel">
+    <h2>Delen:</h2> 
     <div>Deel deze stand van de bouwjarenkaart.nl met iemand:</div>
-    <div>
-      <a href="asd" class="esri-button share-button">
+    <div id="shareButtonPanel">
+      <a href="asd" target="_blank" id="link-twitter"  class="esri-button share-button">
         <span class="share-social-name">Twitter</span>
         <span class="share-social-icon">
-           <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
             width="100%" height="100%" viewBox="0 0 56.693 56.693">
             <title>Twitter</title>
             <path fill="currentColor" stroke-width="0"
@@ -721,25 +746,54 @@
           </svg>
         </span>
       </a>
-      <a href="asd" class="esri-button share-button">
+      <a href="asd" target="_blank" id="link-facebook" class="esri-button share-button">
         <span class="share-social-name">Facebook</span>
         <span class="share-social-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 56.693 56.693" enable-background="new 0 0 56.693 56.693" xml:space="preserve" role="img"><title>Facebook</title><path fill="currentColor" stroke-width="0" d="M40.43,21.739h-7.645v-5.014c0-1.883,1.248-2.322,2.127-2.322c0.877,0,5.395,0,5.395,0V6.125l-7.43-0.029 c-8.248,0-10.125,6.174-10.125,10.125v5.518h-4.77v8.53h4.77c0,10.947,0,24.137,0,24.137h10.033c0,0,0-13.32,0-24.137h6.77 L40.43,21.739z"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+            width="100%" height="100%" viewBox="0 0 56.693 56.693" enable-background="new 0 0 56.693 56.693"
+            xml:space="preserve" role="img">
+            <title>Facebook</title>
+            <path fill="currentColor" stroke-width="0"
+              d="M40.43,21.739h-7.645v-5.014c0-1.883,1.248-2.322,2.127-2.322c0.877,0,5.395,0,5.395,0V6.125l-7.43-0.029 c-8.248,0-10.125,6.174-10.125,10.125v5.518h-4.77v8.53h4.77c0,10.947,0,24.137,0,24.137h10.033c0,0,0-13.32,0-24.137h6.77 L40.43,21.739z">
+            </path>
+          </svg>
         </span>
-        </a>
-        <a href="asd" class="esri-button share-button">
-          <span class="share-social-name">LinkedIn</span>
-          <span class="share-social-icon">
-            <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 32 32" enable-background="new 0 0 32 32" xml:space="preserve" role="img"><title>LinkedIn</title><path fill="currentColor" stroke-width="0" d="M30.7,0H1.3C0.6,0,0,0.6,0,1.3v29.3C0,31.4,0.6,32,1.3,32h29.3c0.7,0,1.3-0.6,1.3-1.3V1.3 C32,0.6,31.4,0,30.7,0z M9.5,27.3H4.7V12h4.8V27.3z M7.1,9.9c-1.5,0-2.8-1.2-2.8-2.8c0-1.5,1.2-2.8,2.8-2.8c1.5,0,2.8,1.2,2.8,2.8 C9.9,8.7,8.6,9.9,7.1,9.9z M27.3,27.3h-4.7v-7.4c0-1.8,0-4-2.5-4c-2.5,0-2.8,1.9-2.8,3.9v7.6h-4.7V12H17v2.1h0.1 c0.6-1.2,2.2-2.5,4.5-2.5c4.8,0,5.7,3.2,5.7,7.3V27.3z"></path></svg>
-            </span>
-          </a>
-          <a href="asd" class="esri-button share-button">
-            <span class="share-social-name">E-mail</span>
-            <span class="share-social-icon"></span>
-            </a>
+      </a>
+      <a href="asd" target="_blank" id="link-linkedin" class="esri-button share-button">
+        <span class="share-social-name">LinkedIn</span>
+        <span class="share-social-icon">
+          <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+            y="0px" width="100%" height="100%" viewBox="0 0 32 32" enable-background="new 0 0 32 32"
+            xml:space="preserve" role="img">
+            <title>LinkedIn</title>
+            <path fill="currentColor" stroke-width="0"
+              d="M30.7,0H1.3C0.6,0,0,0.6,0,1.3v29.3C0,31.4,0.6,32,1.3,32h29.3c0.7,0,1.3-0.6,1.3-1.3V1.3 C32,0.6,31.4,0,30.7,0z M9.5,27.3H4.7V12h4.8V27.3z M7.1,9.9c-1.5,0-2.8-1.2-2.8-2.8c0-1.5,1.2-2.8,2.8-2.8c1.5,0,2.8,1.2,2.8,2.8 C9.9,8.7,8.6,9.9,7.1,9.9z M27.3,27.3h-4.7v-7.4c0-1.8,0-4-2.5-4c-2.5,0-2.8,1.9-2.8,3.9v7.6h-4.7V12H17v2.1h0.1 c0.6-1.2,2.2-2.5,4.5-2.5c4.8,0,5.7,3.2,5.7,7.3V27.3z">
+            </path>
+          </svg>
+        </span>
+      </a>
+      <a href="asd" id="link-email" class="esri-button share-button">
+        <span class="share-social-name">E-mail</span>
+        <span class="share-social-icon">
+          <!-- <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M21.5 4h-19A1.504 1.504 0 0 0 1 5.5v13A1.5 1.5 0 0 0 2.5 20h19a1.5 1.5 0 0 0 1.5-1.5v-13A1.504 1.504 0 0 0 21.5 4zM12 12.07L2.82 5h18.36zm-2.846-.93L2 18.292V5.631zm.798.615L12 13.33l2.048-1.576L21.293 19H2.707zm4.894-.616L22 5.631v12.662z"></path></svg> -->
+          <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+            x="0px" y="0px" viewBox="0 0 330.001 330.001" 
+            xml:space="preserve">
+            <g id="XMLID_348_">
+              <path id="XMLID_350_" fill="currentColor"
+                d="M173.871,177.097c-2.641,1.936-5.756,2.903-8.87,2.903c-3.116,0-6.23-0.967-8.871-2.903L30,84.602
+               L0.001,62.603L0,275.001c0.001,8.284,6.716,15,15,15L315.001,290c8.285,0,15-6.716,15-14.999V62.602l-30.001,22L173.871,177.097z" />
+              <polygon fill="currentColor" id="XMLID_351_" points="165.001,146.4 310.087,40.001 19.911,40 	" />
+            </g>
+
+          </svg>
+
+        </span>
+      </a>
     </div>
 
-    <div>url: hier</div>
+    <div>url:<br/>
+      <input type="text" id="txtUrl" /><input type="button" id="linkbutton" /></div>
   </div>
   <script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
 </body>

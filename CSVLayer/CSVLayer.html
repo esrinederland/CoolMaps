@@ -1,0 +1,340 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - CSVLayer</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.23/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        }
+    </style>
+
+    <script>
+        require(["esri/Map", "esri/views/MapView", "esri/layers/CSVLayer", "esri/widgets/Legend", "esri/layers/FeatureLayer", "esri/widgets/Expand"], (Map, MapView, CSVLayer, Legend, FeatureLayer, Expand) => {
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+            const csvLayer = new CSVLayer({
+                url: "rijksmonumenten.csv",
+                popupTemplate: { title: "{hoofdcategorie}", content: "<a href='{rijksmonumenturl}' target='_blank'>link</a>" }
+            });
+            map.add(csvLayer);
+
+
+            const view = new MapView({
+                container: "mapDiv", // Reference to the view div created in step 5
+                map: map, // Reference to the map object created before the view
+                zoom: 8, // Sets zoom level based on level of detail (LOD)
+                center: [6.1, 52.5] // Sets center point of view using longitude,latitude
+            });
+
+            let legend = new Legend({
+                view: view
+            });
+            view.ui.add(new Expand({content:document.getElementById("info-panel"),expanded:true}), "top-right");
+            view.ui.add(new Expand({content:legend,expanded:true}), "bottom-left");
+
+            var codeExpand = new Expand({
+                view: view,
+                content: document.getElementById("code-panel"),
+                expanded: false,
+                expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+            });
+            view.ui.add(codeExpand, "bottom-right");
+
+            document.getElementById("simple-renderer-button").addEventListener("click", () => { SetRenderer("simple") });
+            document.getElementById("complex-renderer-button").addEventListener("click", () => { SetRenderer("complex") });
+
+            function SetRenderer(rendertype) {
+                AddAction("CSVChangeRenderType", rendertype);
+                let newRenderer = {
+                    type: "simple",  // autocasts as new SimpleRenderer()
+                    symbol: {
+                        type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                        size: 12,
+                        color: "#C0FFEE",
+                        outline: {  // autocasts as new SimpleLineSymbol()
+                            width: 0.5,
+                            color: "#CECECE"
+                        }
+                    }
+                };
+                if (rendertype == "complex") {
+                    newRenderer = {
+                        type: "unique-value",
+                        field: "hoofdcategorie",
+                        defaultSymbol: { type: "simple-marker", color: "#C0FFEE" },
+                        uniqueValueInfos: [
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABhklEQVQ4jZ2TPW7CQBCF30g0pAC5iliXrgjpBpkLUEIkcojlGJhjsF0uQIFTpksVxHaRUrnD0GGJhijNpMC2DNgE5VX79+nN7L6t4Z+qVW2IiCKizU2giDCAAEDrsN+yiADAFkBIRONSMIVm0dJw9GGQxBYAUG+oVqc/0SKiAbhZFUXHYDUfc7Q0JyUd9hus5mMka4vu82wBoJuDIsJJbAfnUFHR0sDraRYRJiKbOfIuLe2adrGF4zIDyEH1vd/+CSZrC/jgYo+hag8mn2/BVdDraQAwOUhEVkRQbygc9uVP57gMx+UtEdmiIwBMu6PZ5P1lWAo+9gMACLN5DhJRICID1R7y5is8gTxfQ7UHthiC88iNu6PZanEOHnubFtdOwLRX6/k6D4LnazguGyIKK8FUT51+EEdLg3pDoXPs7SIZFyARbUTEeL7WAPBzSMxdU12ko+pbvXo9rXexRfP+oTQZVaB1XM7GYdmBUjAt1zouI3vwWx2B44Woqs1KkIiq/9gfjlf1CyFzmDZELQoSAAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Archeologie (N)"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABi0lEQVQ4jZ2Sv04CQRDGv0nM5cxq4lls5E+zpeRoWAt6WuNjwGMAjyHxKTwtaY2FZyMxsbpGIWxzNJsgxIyFd5dD74D4Vbs788s3MzsH+KcOygLMXCWi6V4gM2sAAwCVtV1qZgaAGYCAiHqFYAJdm0mkzUsEa2IAgCPcSq3d6DJzF0AtrSLvOIjGz9pMoo2SVnaJaPwMO4+hOq1bABcZyMzamvjyN5SXmUSQTaWZWRNRmDpqaxalUCprFhDS0wAysLq2y93gPAZ8pfM9BifqrP/++LoVlE0FAKMMJKKQmeEIF6sSZyE9COnNiCjMOwLAUHVa/bfbh0Kw3j4HgCC9ZyARDZj50lMVHUezzRJ9hRNVCfNL8HvleqrTeopv7ot6G+bfNsCk11D6KlsE6SsI6Y2IKCgFE13V240PM4ngCBf1dgNIJrkVJKIpM4+kr7oA8PW5HjlHh+FOMNGdbKquNQu4p8ezooQyMBTSS89BUUIhmJQbCukh/fB9HYGfgVTLgqUgEf2Z5L6OW/UNdgaWSbVzOQ8AAAAASUVORK5CYII=",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Bestuursgebouwen, rechtsgebouwen en overheidsgebouwen"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABhklEQVQ4jZ2TvU4CQRSFz02osDIZC9aExG6wvXbCG4DwDiTDExhKlpJHYGJrj66NNZRO7dKaCAVrLExIrK6Fu5td2AXjqebvy7l35kwF/1SlbENEPCJa/QkUEQbgA6hF2zWLCACsAQRENCgEY2g6Cy0/vFqEkQMAqKpX6/PIiIgBcJ5UkXX0J/MBz0KbKynarjCZD7DcOAxb00cAVykoIhxGrr0LZTULLboNwyLCROQSR05KO6QwctCKGUAKeh/b9VFwuXGABmd7DK7r7dGd8w+C3YYBAJuCROREBKrqIdoWP51WDK14TUQu6wgA42FrOrp97hSCffYBIEjmKUhEvoi0m/UOL96CHNTTBs1622VDsBu5wbA1fVnc58G4t3F2LQfGvbqeNmkQetpAK7ZEFJSCsW767L/PQgtV9ZLe9pKxBxLRSkRsTxsDAF/fn/bsxNtLR9m3euo2jAkjh4vTy8JklIFOK07GQdGBQjAu12nFSB78r47A74V4ZZulIBGV/7Ejjgf1A2cxmLsjZKaiAAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Boerderijen, molens en bedrijven"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABeElEQVQ4jZ2TPW7bQBCFv4FkAgQYCFQnpmNpl5NjyD7G6hiijyEeI8wRUnpLt+wsFQZMGCAgg4EyKSISlEUqQl61fx/ezO7bKf+p6diGmSUisr0KNDMFMmBx+NipmQHsgEJEVoPgEdrUZa51mdNUHoBJmCxmt2tnZg742lbRd8ze/ErrMj8p6bDf8uZXNJVnrpvvwLcONDNtKr/8DPVVlzlR6tTMVER866htaZfUVJ4gVgU6MDl87K4CAe33WISL5fr9ObsIRqkDyDtQRLyZMQkTDvvhpwtiJYh1JyK+7wjwONfN+vXn/SA4u8sAinbegSKSmdkyTO51vy1OoCh1hIul74fgc+RWc908vQyAwGN/7QQ89uqj1HVBiFJHEGsuIsUoeNTD7C57qcucSZi0vZ0l4wwUka2Z5VHqHMDvX1U+DZOzdIx9qx9R6lxTeW6+3A4mYwz0QaztuBg6MAgey/VBrLQPfq0j/L2QZGxzFBSR8T/2D8eL+gN9T5dMN1AwjwAAAABJRU5ErkJggg==",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Cultuur, gezondheid en wetenschap"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABmklEQVQ4jZ2SP2vCUBTFzwUnO1mCRVscAoUMmfI6utSs0knQL6DSwY8gKm4duzXuxUKnplMhTo6Nk4VMCoUq2IB0qNDpdmgSoiYqPdP7c3+cc9+7CfxTibgLZs4S0ewgkJkFgDaAzHKxEswMAHMAJhHVI0EPurP6jrAeHEzGLgAglU5mSg2txsw1AKd+irBju9ccCqvvrEVaLlboNYeYvLmodvNPAC4CkJnFZOwWN6GwrL4DvawIZhZEZPuOYupF26Xp2IWsSgJAAGaXn6u94OTNhQ6IcI+mdplrPd6OdoJ6WQEAIwCJyGZmpNJJLBfRzrIqQValORHZYUcA6FS7+dZN/SUSLDU0ADD9fQASUZuZi1ohJ0aD9/WIFQVaIWeHh2Bz5OrVbv71enAf1VsnfLYGer3aekUJBkGvKJBVySAiMxb0dFVqaB9W30EqnfR7MzaLtkAimjGzoVeUGgB8f/0YxydH9l7Q07NeVmrTsYuz89Q8qiAOtGVV8tdmVEEk6MW1ZVWC/+GHOgJ/D5KNu4wFiWjrJQ913KlfWN2X6+bZHCcAAAAASUVORK5CYII=",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Handelsgebouwen, opslag- en transportgebouwen"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABj0lEQVQ4jZ2Sv2rCUBTGvwNabKCkgSzXgkFHoQ69XfMG2idwjm/QVX2IDs3sEzS+QejWOLTQrRYDNUtAXYIg5XQwCVETlX7T/XN+fN+595TwT5WKLpi5SkTzs0BmlgAGAMRqs5bMDAABAIeIerlgDD274VS64Tdm0QIAoJYroiOaFjNbAG6SFFnHwcifSDec7kRabdYY+RPMoiW6tbsXAPcpyMxyFi3a+1BWbjiFqdclM0si8hJH6cfRjsmPFjAUTQJIwepqsz4JzqIlTEBme3RuVdF3gs+joKnXAcBOQSLymBlquYIiZ0PRYChaQERe1hEAht2a7D99veaCbdEEACfZpyARDZi53VKFfF8FexEbaKnCyw7B/sj1ujX59vgxzuttmD3bAeNePVNvpINg6g0YimYTkVMIxnroiOaPG06hlivobHuz94sOQCKaM7Nt6g0LAKLfjX19cemdBGONTb1u+dEConIV5BUUgZ6haMnaySvIBeO4nqFoSD78XEdg+yDVostCkIgOXvJcx6P6A4p+lkzDE4q9AAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Kastelen, landhuizen en parken"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABmklEQVQ4jZ2SMU/CUBDH/5e4YjBBE+lSt7dJ8oSFARJWwtNPwEACn8AwApNxdLSJA34Cal1NcHBBmziWrQyFhQHTGMdzsG0KtkL8T++9u1/+d/duD//UXlqAmfNENN8JZGYJoA/g2F8tJTMDwAKARUSdRDCAbidjU74+m/BcBwCQyeaOa6rVZuY2AC2sIu7YHw2v5WRsrpXkr5YYDa8xnzk4b3YfAJxFIDNLz3Xqm1Bck7GJYkVJZpZEZIeO0nOnqVAoz51C04UEEIF5/2O5FZzPHABKxnu0xGm59zS6+xMsVhQAGBFIRDYzI5PNwV8lO2u6gKaLBRHZcUcAGFw0u737m8tEsKZaAGCF9wgkoj4z10WhLJ33lzWoVFUQhbIdX4LNletcNLtvV++NpN4G8bc1MOjVLlVVtAilqoKmC4OIrFQwUKOmWt5kbCKTzYW9GZtJv0AimjOzUaqqNgB8ffrG/sGhvRUM9FisqLbnTnGknSySEtJAW9NFeLaSEhLBoFxb0wXCD9/VEfgZSD4tmAoS0a9J7ur4p74BJIeX2J+wCSwAAAAASUVORK5CYII=",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Religieuze gebouwen"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABkklEQVQ4jZ3Sv07CUBQG8O8kFRppchWGFgzpwCzLde0bgE/AXN7AFXgIB5l5AvENutrFxQkTSPg3aNKkmIKY42DbFGyBeKamt79859weBf8sJeuAmStENDsJMrME0AVQ3mw9ycwAMAcwJKJ2KgzRw8Jz5NJz4AdjAEBOEeVqqWkzsw3gKuoimdgdLQdy4Tk7LW22HkbLAVbBGDW99QjgJobMLP1g3NhHyVp4DnRhSWaWRORGidJfTzJRVP56Ak01JYAYVr623lG4CsaAsGRyxuFl4bozeR8ehLqwAKAfQyJymRk5RWCTkaypJjTVnBORm0wEgF5Nb3Vep/epsFpqAEDcUgyJqMvMjWKhLj9WLzvIEBaKhbqbXIL9lWvX9Nbzx9td2my95LsdGM7qGsKKF8EQFjTV7BPRMBOGdVstNacLz0FOEaiWmkB4kwchEc2YuW8IywaA7fdnP3924R6FYT3pwrL99QTn+fI87YMs6GqqGT2nbkUqDNt1NdVE9MNPTQR+L6SSdZgJiejPTZ6aeLB+AGtUlko/COAbAAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Sport, recreatie, vereniging en horeca"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABoUlEQVQ4jZ3SsW7TUBTG8f+ROgQFJAvJ0IYhlhgiy0OGSxijTEwVi98hZuMFIjWV+hCQiRfwQmCv2EB46JCE0Qw0KGZwkYJSMRwGbMsNdhrxTbbv/emce3wP+M8c1C2oaktELveCqmqAMXC0TjZGVQGWwFREgkqYodezMDaz8CvJIgWgaTeOekFnqKpD4FHeRbni+PzswszC+EZL62TD+dkFyeKKwaj7FnhSQFU1ySI93kblzMIYz28bVTUiEuUVzWqe1qI8q3mK7VoGKGDr14/rW2GyuAIw5TNOnf7Dk0+vvuyEnt8GmBRQRCJVpWk3WCebSmS7FrZrLUUkKlcEOB2MuifvX36shE9fdACm+XsBRWSsqsdO/9DEH75vtejg9A+j8iXYvnLBYNT9/ObZNmwDnJa/3YDZWSPPd4qL4PkOtmtNRGRaC7M87wWdb7Mwpmk36AUdyCa5E4rIpapOPN8ZAlz//D25++BOdCvM8s7z28PVPOX+43vLqg11MLJdK3+eVm2ohFm7ke1a5D9834rwdyCtusVaKCL/THLfijvzB9lvlsmH1aZ3AAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Uitvaartcentra en begraafplaatsen"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABj0lEQVQ4jZ2SP0/CUBTFz02YMJiIjQnPhKkJZX4NGwNbB8IHYHAsC98BcHVlsTt+AOpQJwc20zeLSScTyyBhwWCcroNtU6AF4pnen/vLOfe9W8A/Vci7YGZBROFJIDNLAEMAlfVmJZkZABYAXCLqZYIRdO/PPem/egiXAQCgVCxXWrJrM7MN4DpOkXYcTmdj6c+9rUjrzQrT2RjhZ4BOsz8FYCYgM8twGbR3obT8uQezbklmlkSkYkcZRzukcBlAaLoEkIBivVkdBz8DwIBM9+jWqo3Bs3o4CJp1CwCcBCQixcwoFcvIcxaaDqHpCyJSaUcAGHWa/cHk6TYTbMkuALjxPgGJaMjM7Vq1Id/eX7YjGhZq1YZKD8HuyPU6zb5/N7nJ6m2UPtsCo16VaVjJIJiGBaHpDhG5uWCkTkt2P/y5h1KxHPfm7BbtgUQUMrNjGpYNAN8/X8752aU6CkZ6NOuWHS4DXF1UF1kFeaASmh6v3ayCTDCKq4SmI/7wUx2BvwcReZe5IBHtveSpjgf1C9avluVYMJ9xAAAAAElFTkSuQmCC",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Verdedigingswerken en militaire gebouwen"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABZ0lEQVQ4jZ2TO3KDQBBEe6qcyImLUOuQTHI2HAN8jOEYoGOwxxC+gVNN5pTQkIlQLifjgE8hCSSVO4JdXnUP2/uEf+ppacPMHBHVD4FmxgByAOtT07CZAUADoCSidBbsoaLynivv0aoCAFbOrbdZJmYmAF6HFFPH/JCmXHl/FulU1zikKVpVREWxBxCNoJlxqxpfQlNV3iMUYTNjItLBkY99tFs6qiJgZgAj6H6a5i7Yz83TGUsXx9lXnt8EQxEA8CNIRGpmWDmHUz1/dAEzAuaGiHTqCAC7qCiyzySZBd+6NOXwPoJElJtZ7JKE67I8g0IRuDjWaQkuK5dGRXHYz4AAdtO1M7CfVUORsQihCAJmT0TlItjrfZvn35X3WDmHbTfbVTOuQCKqzcyH0uX7bVv/7NxVO5au1UcoIkdVvGw2s81YAjVgHp7LuQ9mwT6uBswYDvxRR6D7IW5pcxEkouU7dsfxpv4ArcKY7aD/J/8AAAAASUVORK5CYII=",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Voorwerpen op pleinen en dergelijke"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 5.416666666666666,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAA4AAAAWCAYAAADwza0nAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABkElEQVQ4jZ2SsWrCUBSG/wMpBishJRnU4OIS3Cy3k88gfQz7GOpjNG/QtenYreDU0G4SKF3aqEOEoMUm1HI6mISoiUr/6d57zsd/zrlHwj8lFQWYuU5Ek5NAZhYABgBqq2gtmBkApgBsIrrJBWPo1vUC4XoB5osQAFAuSbV2U+8xcw+AkVSRdRyMxjPhesFWSatojdF4hvkiRKdVvQdwlYLMLOaLsLsLZeV6AUxDFcwsiMhJHIW/DAuhRP4yhKbIAkAK1r+j9VFwvggBAyLbo93QK/2Xd/8gaBoqAFgpSEQOM6NckrAqcNYUGZoiT4nIyToCwLDTqvYfXz9zwcumDgB2ck9BIhowc7ehV8SH/7VXYkOvONkl2F25m06r+nz39JbX2zD7tgXGvTqmoaaLYBoqNEW2iMguBGNdt5u653oByiUJ7U1v1m7SHkhEE2a2TEPtAUD082udy2fOUTDWg2moPX8Z4qJSmuYlFIGOpsjJ2c5LyAXjch1NkZF8+KmOwGYg9aJgIUhEe5M81fGg/gAJFJW12vEsmAAAAABJRU5ErkJggg==",
+                                    "width": 10,
+                                    "height": 16
+                                },
+                                "value": "Weg- en waterbouwkundige werken"
+                            },
+                            {
+                                "symbol": {
+                                    "angle": 0,
+                                    "xoffset": 0,
+                                    "yoffset": 4.583333333333334,
+                                    "type": "picture-marker",
+                                    "url": "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAsAAAASCAYAAACNdSR1AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABvklEQVQokZXQT0gUYRgG8OexQUx3dXdnQacBc3KoHalAwxW6hJX9o25FGtShi3gOQejmLTzWqW7SZSM6CB5kY0TqNKmHXWIncJvwz85i62w25YJIX5dcRleL3tv3vT9enveV8B8lBR9CCA2A5hQ3z2ltLR6ANyTLe7AQIrry1R99l129+T67qmby6zE1HsbQpa6x71vbU82N9Y+Ck7tfpj8Op2Zzsd0pueUNvF38oj+8fnZECDFN0pQAIF/4dj+TX6/CYM18cI7euXDqNgBTEkJEU7P2QG5548Cl1ko+5j8V7wohHksAItKRusrfrrC988sDEJFIOkXvx7waD+trJb8GqvEwujrkzyQdCQBao00v7l00rky8smpy3+jr9Ix2+Un1GiTNQslPzWVWRizbrcJkQsG1pDZF0gyeDoocmhjsNwYs29UBoLmxHld7Tyx1Hos83TVVTNIp+5XJZEIZt2wXiXYZPSdbn5NcrMEAEAk1PBu+1f3Asl19sN9Y0tpaXgf7ezDJcqHkpy/3dOjGcTlN0jkU/8m+cP60WlHk0ML+Xg0GYJ7R4lkA5j8xScf1fo7vj3DYZCixpumD/n8DLyqViQ5GoQEAAAAASUVORK5CYII=",
+                                    "width": 10,
+                                    "height": 19
+                                },
+                                "value": "Woningen en woningbouwcomplexen"
+                            }
+                        ]
+                    }
+                }
+                csvLayer.renderer = newRenderer;
+
+            }
+        });
+    </script>
+</head>
+
+</html>
+
+<body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - CSVLayer</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel" heading="Change Renderers">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <div id="button-container">
+                    <calcite-button id="simple-renderer-button" scale="l" width="full">Different renderer
+                    </calcite-button>
+                    <calcite-button id="complex-renderer-button" scale="l" width="full">Complex renderer
+                    </calcite-button>
+
+                </div>
+            </div>
+        </calcite-panel>
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="code-panel" heading="CSV Layer"
+            style="width:350px">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <!-- HTML generated using hilite.me -->
+                <div
+                    style="background: #f8f8f8; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+                    <pre style="margin: 0; line-height: 125%"><span style="color: #008000; font-weight: bold">const</span> csvLayer <span style="color: #666666">=</span> <span style="color: #008000; font-weight: bold">new</span> CSVLayer({
+        url<span style="color: #666666">:</span> <span style="color: #BA2121">&quot;rijksmonumenten.csv&quot;</span>
+    });
+map.add(csvLayer);
+</pre>
+                </div>
+
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
