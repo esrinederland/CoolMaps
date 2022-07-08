@@ -1,0 +1,192 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Client Side Binning</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        }
+    </style>
+
+    <script>
+        require(["esri/Map", "esri/views/MapView", "esri/layers/FeatureLayer",
+            "esri/layers/support/LabelClass", "esri/widgets/Legend", "esri/widgets/Expand"], (Map, MapView, FeatureLayer, LabelClass, Legend, Expand) => {
+                const map = new Map({
+                    basemap: "topo-vector"
+                });
+
+                //max for re
+                const visualvariablesMax = {3:2000,4:1000,5:250,6:100,7:25};
+                const featureReductionConfig = {
+                    type: "binning",
+                    fixedBinLevel: 4,
+                    renderer: {
+                        type: "simple",  // autocasts as new SimpleRenderer()
+                        symbol: {
+                            type: "simple-fill",  // autocasts as new SimpleFillSymbol()
+                            outline: {  // autocasts as new SimpleLineSymbol()
+                                width: 0.5,
+                                color: "white"
+                            }
+                        },
+                        visualVariables: [{
+                            type: "color",
+                            field: "aggregateCount",
+                            stops: [
+                                { value: 1, color: "white" },
+                                { value: 1000, color: "blue" }
+                            ]
+                        }]
+                    }
+                }
+
+                const fl = new FeatureLayer({ url: "https://services.arcgis.com/nSZVuSZjHpEZZbRo/arcgis/rest/services/Monumenten/FeatureServer/0", minScale: 0, featureReduction:featureReductionConfig });
+
+                map.add(fl);
+
+                const view = new MapView({
+                    container: "mapDiv", // Reference to the view div created in step 5
+                    map: map, // Reference to the map object created before the view
+                    zoom: 8, // Sets zoom level based on level of detail (LOD)
+                    center: [6.1, 52.5] // Sets center point of view using longitude,latitude
+                });
+
+                let legend = new Legend({
+                    view: view
+                });
+                view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "top-right");
+                view.ui.add(new Expand({ content: legend, expanded: true }), "bottom-left");
+
+                document.getElementById("binning-switch").addEventListener("calciteSwitchChange", () => {
+                    SetBinning();
+                    AddAction("Binning toggle")
+                });
+                document.getElementById("level-slider").addEventListener("calciteSliderChange", () => {
+                    SetBinning();
+                    AddAction("Binning slider")
+                });
+
+                function SetBinning()
+                {
+                    //Get the values from the slider and switch
+                    var svalue = document.getElementById("binning-switch").checked;
+                    var binLevel = document.getElementById("level-slider").value;
+                    console.log("Setting bin level to " + binLevel+ ", checked: "+ svalue);
+                    
+                    if(svalue)
+                    {
+                        //get the new rendering value max
+                        var newVis = visualvariablesMax[binLevel];
+                        //change the config based on the ui values
+                        featureReductionConfig.fixedBinLevel = binLevel;
+                        featureReductionConfig.renderer.visualVariables[0].stops[1].value = newVis;
+                        //add the featureRedution to the layer
+                        fl.featureReduction = featureReductionConfig;
+                    }
+                    else
+                    {
+                        //remove the featurereduction from the layer
+                        fl.featureReduction=null;
+                    }
+                }
+            });
+    </script>
+</head>
+
+</html>
+
+<body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Client side binning</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel" heading="Change Binning">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <div id="button-container">
+                    <calcite-label>On / Off:
+                    <calcite-switch checked id="binning-switch" label="Binning on/of" name="B" scale="m"></calcite-switch></calcite-label>
+                    <!-- <calcite-button id="complex-renderer-button" scale="l" width="full">Complex renderer
+                    </calcite-button> -->
+                    <br/>
+                    <calcite-label>Bin level:
+                    <calcite-slider id="level-slider" label-handles label-ticks max-label="7" max="7" min-label="3" min="3" name="csdfsd"
+    page-step="1" precise scale="l" snap value="4"></calcite-slider></calcite-label>  
+
+                </div>
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
