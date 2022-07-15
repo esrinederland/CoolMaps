@@ -177,6 +177,7 @@
 
 
                     btnCancel.disabled = false;
+                    AddAction("StartedScratch");
                     //sketchVM.create("polyline",)
                 }
                 else {
@@ -242,6 +243,7 @@
                 console.log("Color", color);
                 document.getElementById("alert").color = color;
                 document.getElementById("alert").active = true;
+                AddAction("ScratchMesage", msg);
             }
 
             function StopScratching() {
