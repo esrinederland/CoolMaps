@@ -1,0 +1,364 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Holidaymap</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: #aa8700 ;
+            /* var(--calcite-ui-brand); */
+            border-bottom: solid 1px #2f2c1c;
+            /* var(--calcite-ui-brand-press); */
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        .info-container>calcite-input {
+            margin-bottom: 4px;
+        }
+
+        /* 
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        } */
+    </style>
+
+    <script>
+        require(["esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand",
+            "esri/layers/VectorTileLayer",
+            "esri/Graphic",
+            "esri/layers/GraphicsLayer",
+            "esri/layers/GroupLayer",
+            "esri/layers/TileLayer",
+            "esri/layers/FeatureLayer",
+            "esri/geometry/geometryEngine",
+            "esri/widgets/Sketch/SketchViewModel", "esri/geometry/Polyline", "esri/widgets/Search"], (WebMap, MapView, Legend, Expand,
+                VectorTileLayer, Graphic, GraphicsLayer, GroupLayer, TileLayer, FeatureLayer, geometryEngine, SketchViewModel, Polyline, Search) => {
+            // const map = new Map({
+            //     basemap: "topo-vector"
+            // });
+
+            const map = new WebMap({ portalItem: { id: "cbe7dd1c46cf4695bfdf26be3c1df062" } });
+
+            const btnStartToggle = document.getElementById("start-btn");
+            const btnCancel = document.getElementById("cancel-btn");
+            const nameTxt = document.getElementById("name-txt");
+            const descTxt = document.getElementById("desc-txt");
+
+            let isScratching = false;
+            //let tempGraphic = null
+            const view = new MapView({
+                container: "mapDiv", // Reference to the view div created in step 5
+                map: map, // Reference to the map object created before the view
+                zoom: 8, // Sets zoom level based on level of detail (LOD)
+                center: [6.1, 52.5],
+                constraints:{minZoom:8} // Sets center point of view using longitude,latitude,
+
+            });
+            const searchWidget = new Search({
+                view: view
+            });
+            // Adds the search widget below other elements in
+            // the top left corner of the view
+            view.ui.add(searchWidget, {
+                position: "top-right"
+            });
+
+            view.ui.add(new Expand({ content: document.getElementById("scratch-panel"), expanded: true, expandIconClass: "esri-icon-edit" }), "bottom-right");
+            view.ui.add(new Expand({ content: document.getElementById("last-5-panel"), expanded: true, expandIconClass: "esri-icon-table" }), "bottom-left");
+            view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: false, expandIconClass: "esri-icon-question" }), "top-left");
+
+            const fireFlyLayer = new TileLayer({ portalItem: { id: "a66bfb7dd3b14228bf7ba42b138fe2ea" } });
+            const gLayer = new GraphicsLayer({ blendMode: "destination-in" });
+
+            //var tempG =new Graphic({geometry:{type:"polygon",rings:[[[6.1,52.5],[6.3,52.5],[6.3,52.6],[6.1,52.6]]],spatialReference:{wkid:4326}},symbol:{type:"simple-fill",color:[255,0,0,1]}});
+            var tempGraphic = new Graphic({ geometry: { type: "polygon" }, symbol: { type: "simple-fill", color: [255, 0, 0, 1] } });
+
+            gLayer.add(tempGraphic);
+
+            const groupLayer = new GroupLayer({
+                layers: [fireFlyLayer, gLayer]
+
+            });
+            map.add(groupLayer);
+
+
+
+            view.when(() => {
+                var fl = view.map.allLayers.find((x) => x.title == "ScratchEntries");
+
+                fl.queryFeatures({ where: "1=1", outFields: ["*"], orderByFields: ["OBJECTID DESC"], returnGeometry: true }).then((res) => {
+                    var last5 = res.features.slice(0, 5);
+                    var last5Panel = document.getElementById("last-5-panel");
+                    var list = document.createElement("calcite-value-list");
+                    last5.forEach((x) => {
+                        var item = document.createElement("calcite-value-list-item");
+                        item.setAttribute('label', x.attributes.NAME);
+                        var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                        d.setUTCSeconds(x.attributes.CreationDate / 1000);
+                        var desc = formatDate(d);
+                        if (x.attributes.DESCRIPTION) {
+                            desc += " - " + x.attributes.DESCRIPTION;
+                        }
+                        item.setAttribute('description', desc)
+                        item.addEventListener("click", () => {
+                            view.goTo(x.geometry);
+                        });
+                        list.appendChild(item);
+                    });
+                    last5Panel.appendChild(list);
+                    // document.getElementById("last-5-panel").innerHTML = last5html;
+                });
+            });
+
+            btnStartToggle.addEventListener("click", () => {
+                ToggleStart();
+            });
+
+            btnCancel.addEventListener("click", () => {
+                StopScratching();
+            });
+
+            function ToggleStart() {
+                console.log(btnStartToggle);
+                if (btnStartToggle.innerHTML == "Start Scratch") {
+                    isScratching = true;
+                    btnStartToggle.innerHTML = "Save Scratch"
+
+
+                    btnCancel.disabled = false;
+                    //sketchVM.create("polyline",)
+                }
+                else {
+                    var name = nameTxt.value;
+                    var desc = document.getElementById("desc-txt").value;
+
+                    if (tempGraphic.geometry == null || tempGraphic.geometry.rings.length == 0) {
+                        showMessage("Scratch a geometry!", "red");
+                        return;
+                    }
+                    if (name == "") {
+
+                        nameTxt.status = "invalid";
+                        showMessage("Name is required!", "red");
+                        return;
+                    }
+
+                    var g = new Graphic({
+                        geometry: tempGraphic.geometry,
+                        attributes: {
+                            NAME: name,
+                            DESCRIPTION: desc
+                        }
+                    });
+                    var addLayer = new FeatureLayer({ url: "https://services.arcgis.com/emS4w7iyWEQiulAb/ArcGIS/rest/services/HolidayMap_public_add/FeatureServer/0" });
+                    addLayer.applyEdits({ addFeatures: [g] }).then((results) => {
+                        console.log(results);
+                        if (results.addFeatureResults.length > 0) {
+                            var addresult = results.addFeatureResults[0];
+                            if (addresult.error) {
+                                showMessage("Error saving scratch!", "red");
+                                return;
+                            }
+                            AddAction("AddedScratch", addresult.objectId);
+                            var oid = addresult.objectId;
+
+                            nameTxt.value = "";
+                            descTxt.value = "";
+
+                            view.goTo(g.geometry.extent.expand(2));
+                            StopScratching();
+                            showMessage(`Scratch saved! (oid: ${oid})`, "green");
+
+
+                        }
+                        else {
+                            showMessage("Error saving scratch!", "red");
+                        }
+
+                    });
+
+                }
+            }
+
+            function showMessage(msg, color) {
+                document.getElementById("alert").active = false;
+                document.getElementById("alert-message").innerHTML = msg;
+                document.getElementById("alert-title").innerHTML = "Error";
+                if (color == "green") {
+                    document.getElementById("alert-title").innerHTML = "Success!";
+                }
+
+                console.log("Color", color);
+                document.getElementById("alert").color = color;
+                document.getElementById("alert").active = true;
+            }
+
+            function StopScratching() {
+                nameTxt.status = "valid";
+                document.getElementById("alert").active = false;
+                isScratching = false;
+                btnStartToggle.innerHTML = "Start Scratch"
+                tempGraphic.geometry = null;
+                btnCancel.disabled = true;
+            }
+
+            function padTo2Digits(num) {
+                return num.toString().padStart(2, '0');
+            }
+
+            function formatDate(date) {
+                return (
+                    [
+                        date.getFullYear(),
+                        padTo2Digits(date.getMonth() + 1),
+                        padTo2Digits(date.getDate()),
+                    ].join('-') +
+                    ' ' +
+                    [
+                        padTo2Digits(date.getHours()),
+                        padTo2Digits(date.getMinutes()),
+                        padTo2Digits(date.getSeconds()),
+                    ].join(':')
+                );
+            }
+
+            var vertices = [];
+            view.on("drag", (evt) => {
+
+                //if button is pressed and the left mouse button is pressed
+                if (isScratching) {
+
+                    evt.stopPropagation();
+                    var mapPoint = view.toMap(evt);
+                    var bufferGeom = mapPoint;
+                    console.log("evt.action: " + evt.action);
+                    if (evt.action == "start") {
+                        vertices = [];
+
+                    }
+                    vertices.push([mapPoint.x, mapPoint.y]);
+                    console.log("vertices:", vertices)
+                    if (vertices.length > 1) {
+                        bufferGeom = new Polyline({ paths: [vertices], spatialReference: view.spatialReference });
+
+                        const length = geometryEngine.geodesicLength(bufferGeom, "meters");
+                        if (length > 10000) {
+                            StopScratching();
+                            showMessage("Scratch too long! (max 10.000m)", "red");
+
+                            return;
+                        }
+                    }
+
+                    //var mapPoint = evt.mapPoint;
+                    console.log(bufferGeom);
+                    var buffer = geometryEngine.buffer(bufferGeom, 500, "meters");
+
+                    //var newGeom = geometryEngine.union([tempGraphic.geometry, buffer]);
+                    tempGraphic.geometry = buffer;
+
+                    evt.stopPropagation();
+                }
+            });
+        });
+    </script>
+</head>
+
+</html>
+
+<body class="calcite-theme-dark">
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Holidaymap</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="scratch-panel"
+            heading="Start Scratching">
+            <div id="info-container" class="info-container" style="padding: 8px;">
+                <calcite-alert id="alert" auto-dismiss placement="top">
+                    <div slot="title" id="alert-title">Can't save</div>
+                    <div slot="message" id="alert-message">Name is required!</div>
+                </calcite-alert>
+                <calcite-input id="name-txt" placeholder="Your name"></calcite-input>
+                <calcite-input id="desc-txt" placeholder="Your holiday description"></calcite-input>
+            </div>
+            <calcite-button id="start-btn" width="half" slot="footer-actions">Start Scratch</calcite-button>
+            <calcite-button id="cancel-btn" width="half" slot="footer-actions" color="red" disabled="true">Cancel
+            </calcite-button>
+        </calcite-panel>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="last-5-panel" heading="Last 5 entries">
+
+        </calcite-panel>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel" heading="Info">
+            <div style="padding: 8px;">Scratch your holiday destination. You can drag the map to create a scratch.
+                <br />Click the "Save Scratch" button to save the scratch to the map.</div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
