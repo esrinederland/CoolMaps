@@ -1,0 +1,202 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Envelope 2 Polygon</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+    </style>
+
+    <script>
+        require(["esri/Map", "esri/views/MapView",  "esri/widgets/Expand","esri/Graphic","esri/geometry/Polygon"], (Map, MapView, Expand, Graphic,Polygon) => {
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+
+            const view = new MapView({
+                container: "mapDiv", // Reference to the view div created in step 5
+                map: map, // Reference to the map object created before the view
+                zoom: 8, // Sets zoom level based on level of detail (LOD)
+                center: [6.1, 52.5] // Sets center point of view using longitude,latitude
+            });
+
+           
+            view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "top-right");
+           
+            document.getElementById("envelope-go-button").addEventListener("click", () => {
+                AddAction("AddEnvelope")
+                var input = document.getElementById("envelope-input-field").value;
+                var inputArray = input.split(",");
+                var envelope = {
+                    xmin: parseFloat(inputArray[0]),
+                    ymin: parseFloat(inputArray[1]),
+                    xmax: parseFloat(inputArray[2]),
+                    ymax: parseFloat(inputArray[3])
+                };
+                var wkid = view.spatialReference.wkid;
+                if(inputArray.length > 3)
+                {
+                    wkid = parseInt(inputArray[4]);
+                }
+                var p = extent2Polygon(envelope,wkid);
+                
+                view.graphics.removeAll();
+                var graphic = AddPolygon(p);
+                view.goTo(graphic);
+                document.getElementById("polygon-input-field").value = JSON.stringify(graphic.geometry.toJSON());
+            });
+
+            document.getElementById("polygon-go-button").addEventListener("click", () => {
+                AddAction("AddPolygon")
+                var input = document.getElementById("polygon-input-field").value;
+               
+                var p = JSON.parse(input);
+                
+                if(!p.spatialReference)
+                {
+                    p.spatialReference = {wkid: view.spatialReference.wkid};
+                }
+                var polygon = new Polygon(p);
+
+                view.graphics.removeAll();
+                var extentG = AddPolygon(extent2Polygon(polygon.extent,polygon.spatialReference.wkid),[0,255,0])
+                var graphic = AddPolygon(polygon);
+                view.goTo(graphic);
+                document.getElementById("envelope-input-field").value  = `${polygon.extent.xmin},${polygon.extent.ymin},${polygon.extent.xmax},${polygon.extent.ymax},${polygon.spatialReference.wkid}`;
+
+            });
+
+            function extent2Polygon(extent,wkid)
+            {
+                var p =  {
+                        type: "polygon",
+                        rings: [
+                            [
+                                [extent.xmin, extent.ymin],
+                                [extent.xmin, extent.ymax],
+                                [extent.xmax, extent.ymax],
+                                [extent.xmax, extent.ymin],
+                                [extent.xmin, extent.ymin]
+                            ]
+                        ],
+                        spatialReference: { wkid: wkid }
+                    }
+                 
+                return new Polygon(p);
+            }
+
+            function AddPolygon(polygon, color=[255,0,0])
+            {
+                //copy color array
+                var fillColor =[...color]
+                fillColor.push(0.5);
+                var outlineColor =  [...color]
+                outlineColor.push(1);
+
+                var g = new Graphic({
+                    geometry: polygon,
+                    symbol: {
+                        type: "simple-fill",
+                        color: fillColor,
+                        outline: {
+                            color: outlineColor,
+                            width: 1
+                        }
+                    }});
+                view.graphics.add(g);
+                return g;
+            }
+        });
+    </script>
+</head>
+
+</html>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Envelope 2 Polygon</h2>
+        </div>
+        <div id="mapDiv" class="mapdiv"></div>
+        <calcite-panel height-scale="l" style="width:400px;" data-panel-id="info" id="info-panel" heading="Input Geometries">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+
+                <calcite-label>Envelope 
+                    <calcite-input id="envelope-input-field" placeholder="minx, miny, maxx, maxy, wkid" />
+                        <calcite-button slot="action" id="envelope-go-button">Go</calcite-button>
+                    </calcite-input>
+                </calcite-label>
+                
+                <calcite-label>Polygon   
+                    <calcite-input id="polygon-input-field" type="textarea" placeholder="Polygon JSON">
+                    </calcite-input></calcite-label>
+                <calcite-button id="polygon-go-button" style="height:32px;width:100%;margin-top:-0.75rem;">Go</calcite-button>
+          
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>

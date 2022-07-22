@@ -25,8 +25,8 @@
   <meta name="twitter:description" content="Een kaart die de bouwjaren in Nederland visualiseert">
   <meta name="twitter:image" content="https://bouwjarenkaart.nl/thumbnail.png">
 
-  <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/dark/main.css" />
-  <script src="https://js.arcgis.com/4.22/"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/dark/main.css" />
+  <script src="https://js.arcgis.com/4.24/"></script>
 
   <script>
     require([
@@ -245,10 +245,10 @@
         var params = new URLSearchParams(window.location.search);
           params.set(key, value);
           var newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + params.toString();
-          
-        if (history.pushState) {
-          window.history.pushState({ path: newUrl }, '', newUrl);
-        }
+          //window.location.replace(newUrl); 
+         if (history.pushState) {
+           window.history.pushState({ path: newUrl }, '', newUrl);
+         }
         updateShareUrls(newUrl);
       }
       function getGetParamOrDefault(key, defaultValue) {
@@ -278,8 +278,8 @@
       {
         var text = "Bouwjarenkaart Nederland: "
         document.getElementById("link-twitter").href="https://twitter.com/intent/tweet?text=" + text + "&url=" + encodeURI(newUrl) + "&hashtags=bouwjarenkaart,ArcGIS"
-        document.getElementById("link-facebook").href="https://www.facebook.com/sharer/sharer.php?u=" + newUrl
-        document.getElementById("link-linkedin").href="https://www.linkedin.com/sharing/share-offsite/?url=" + newUrl
+        document.getElementById("link-facebook").href="https://www.facebook.com/sharer/sharer.php?u=" + encodeURI(newUrl)
+        document.getElementById("link-linkedin").href="https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURI(newUrl)
         document.getElementById("link-email").href="mailto:?subject=" + text + "&body=" + encodeURI(newUrl)
 
         document.getElementById("txtUrl").value = newUrl
