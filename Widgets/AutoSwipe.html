@@ -1,0 +1,156 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>AutoSwipe
+    </title>
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+        }
+
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/Map",
+            "esri/WebMap",
+            "esri/views/MapView",
+
+            "esri/widgets/Swipe",
+            "esri/widgets/Expand"
+        ],
+            function (Map, WebMap, MapView,
+                Swipe, Expand) {
+
+
+                //get the map
+                // const map = new Map({
+                //     basemap: "topo-vector"
+                // });
+                const map = new WebMap({ portalItem: { id: "a73ff746bfc94949979f0c5a86135019" } });
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map
+                });
+
+                view.ui.add(document.getElementById("slabutton"), "top-right");
+
+                //wait for the view to load
+                view.when(() => {
+
+                    //get the layer by the title in the webmap
+                    var flowLayer = view.map.layers.find((x) => x.title == "Flow");
+                    var arrowLayer = view.map.layers.find((x) => x.title == "Pijltjes");
+
+                    var s = new Swipe({
+                        view: view,
+                        leadingLayers: [arrowLayer],
+                        trailingLayers: [flowLayer],
+                        position:100
+                    },
+                    );
+                    view.ui.add(s);
+
+                    var intervalid = null;
+                    var delta = -0.2;
+
+                    document.getElementById("slabutton").onclick = function () {
+                        if(intervalid != null){
+                            clearInterval(intervalid);
+                            intervalid = null;
+                        }
+                        else{
+                            intervalid = setInterval(function () {
+                                s.position = s.position + delta;
+                                if(s.position<=0)
+                                {
+                                    delta = delta * -1;
+                                }
+                                if(s.position >= 100)
+                                {
+                                    delta = delta * -1;
+                                }
+                            }, 10);
+                        }
+                    };
+                });
+            });
+    </script>
+</head>
+
+<body class="calcite-theme-dark">
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps: AutoSwipe</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+        <calcite-icon id="slabutton" icon="compare" scale="l">
+      </calcite-icon>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
