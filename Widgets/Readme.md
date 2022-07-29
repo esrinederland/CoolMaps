@@ -2,7 +2,7 @@
 This sample shows how to manipulate the swipe widget into an autoswipe.
 
 
-![AutoSwipe the Swipe widget](../images/20220729_Autoswipe.gif)
+![AutoSwipe the Swipe widget](../images/20220729_AutoSwipe.gif)
 <br>
 <br>
 View this application live:
