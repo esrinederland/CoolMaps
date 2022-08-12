@@ -7,4 +7,4 @@ This sample shows how to use Bookmarks to set the initial Viewpoint in your View
 <br/>
 <br/>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/BookmarkURLParameter/BookmarkURLParameter.html)
+[here](https://esrinederland.github.io/CoolMaps/BookmarkURLParameter/BookmarkURLParameter.html?bookmark=Tilburg)
