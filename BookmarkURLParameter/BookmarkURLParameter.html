@@ -1,0 +1,201 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Bookmark URL Parameter</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-warning);
+            border-bottom: solid 1px var(--calcite-ui-danger-press);
+            color: var(--calcite-ui-danger-press);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-border-1);
+            border-top: solid 1px var(--calcite-ui-border-2);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        }
+    </style>
+
+    <script>
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/widgets/Legend",
+            "esri/widgets/LayerList",
+            "esri/widgets/Bookmarks",
+            "esri/widgets/Expand"
+        ], (WebMap, MapView, Legend, LayerList, Bookmarks, Expand) => {
+
+            // Load WebMap from PortalItem
+            const map = new WebMap({
+                portalItem: {
+                    id: "c8ea45cab97b4bab822db31e036882a8"
+                }
+            });
+            const view = new MapView({
+                container: "mapDiv",
+                map: map
+            });
+
+            // Add the Info Panel
+            view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "bottom-right");
+
+            // Add a Legend Widget
+            let legend = new Legend({
+                view: view
+            });
+            view.ui.add(new Expand({ content: legend, expanded: true }), "bottom-left");
+
+            // Add a LayerList Widget
+            const layerlist = new LayerList({
+                view: view
+            });
+            view.ui.add(new Expand({ content: layerlist, expanded: false }), "top-right");
+
+            // Add a Bookmarks Widget
+            let bookmarks = new Bookmarks({
+                view: view
+            });
+            view.ui.add(new Expand({ content: bookmarks, expanded: false }), "top-right");
+
+            // Once the Map is loaded
+            map.when(function () {
+
+                // Turn on relevant Layers
+                var temperatureLayer = map.layers.find(layer => layer.title === "Hittekaart gevoelstemperatuur");
+                temperatureLayer.visible = true;
+                var waterLayer = map.layers.find(layer => layer.title === "Risico opwarming oppervlaktewater - huidig");
+                waterLayer.visible = false;
+
+                // Check the URL parameters
+                const url = new URL(window.location.href);
+
+                // Get the value for the bookmark URL parameter 
+                var bookmarkName = url.searchParams.get("bookmark");
+                if (bookmarkName) {
+                    setViewpointFromBookmark(bookmarkName);
+                }
+
+            });
+
+
+            // Function to set the viewpoint of the current View to a given Bookmark
+            function setViewpointFromBookmark(bookmarkName) {
+                // Find the Bookmark corresponding to the name in the URL parameter
+                var bookmark = map.bookmarks.items.find(element => element.name === bookmarkName);
+
+                // Check whether an existing Bookmark could be found
+                if (bookmark) {
+                    console.log("Using extent from bookmark: ", bookmarkName);
+
+                    // Use the bookmark to update the View's viewpoint
+                    bookmarks.goTo(bookmark);
+                }
+                else {
+                    var alertMessage = "Bookmark <i>" + bookmarkName + "</i> does not exist";
+                    document.querySelector("#alert-title").innerHTML = alertMessage;
+                    document.querySelector("calcite-alert").active = true;
+                }
+            }
+        });
+    </script>
+</head>
+
+</html>
+
+<body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Bookmark URL Parameter</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-alert id="alert" placement="top" scale="m">
+            <div id="alert-title" slot="title"></div>
+            <div slot="message">
+                Using default Extent
+            </div>
+        </calcite-alert>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel"
+            heading="Bookmark URL Parameter">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <p>
+                    The start Viewpoint from the Map can be set using the <i>bookmark</i> URL parameter.
+                </p>
+                <p>
+                    Expand the Bookmarks Widget to show a list of all available Bookmarks.
+                </p>
+                <p>
+                    Example URL Parameter:
+                </p>
+                <p>
+                    <a href="?bookmark=Tilburg">?bookmark=Tilburg</a>
+                </p>
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
