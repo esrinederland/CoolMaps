@@ -1,0 +1,466 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - MediaLayer</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+    <style>
+      html,
+      body,
+      #mapDiv {
+          padding: 0;
+          margin: 0;
+          height: 100%;
+          width: 100%;
+      }
+
+      #header {
+          padding-left: 10px;
+          background-color: var(--calcite-ui-brand);
+          border-bottom: solid 1px var(--calcite-ui-brand-press);
+          color: var(--calcite-ui-foreground-3);
+      }
+
+      #footer {
+          padding: 10px 5px 10px 5px;
+          background-color: var(--calcite-ui-background);
+          border-top: solid 1px var(--calcite-ui-border-1);
+
+      }
+
+      /*Remove the black bar from the map*/
+      .mapDiv .esri-view-surface:focus::after {
+          outline: auto 0px !important;
+      }
+
+      .esri-logo {
+          margin: 0.375 rem;
+          content: "";
+          display: inline-block;
+          background-repeat: no-repeat;
+          background-position: center;
+          background-color: transparent;
+          min-height: 30px;
+          min-width: 70px;
+          line-height: 0;
+          background-size: 100% 100%;
+          background-image: url(../images/esri-logo.svg);
+      }
+
+      /*on a black theme change the logo*/
+      .calcite-theme-dark .esri-logo {
+          background-image: url(../images/esri-logo-reversed.svg);
+      }
+
+      .info-container>calcite-input {
+          margin-bottom: 4px;
+      }
+
+      #infoDiv {
+        padding: 10px;
+        width: 320px;
+      }
+
+      #elementsDiv, #layerToggle {
+        margin: 10px;
+      }
+
+      #companyLogo {
+        width:150px;
+        margin:10px;
+      }
+
+      .esri-slider {
+        height: 40px;
+        background: none;
+        width: 75%;
+      }
+
+      .leftPadding{
+        padding-left: 5px;
+      }
+
+      .rightPadding{
+        padding-right: 5px;
+        font-weight: bold;
+      }
+    </style>
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/MediaLayer",
+        "esri/layers/support/ImageElement",
+        "esri/layers/support/VideoElement",
+        "esri/layers/support/ExtentAndRotationGeoreference",
+        "esri/geometry/Extent",
+        "esri/widgets/Slider",
+        "esri/widgets/Expand",
+        "esri/layers/support/CornersGeoreference",
+        "esri/geometry/Point"
+      ], (
+        Map,
+        MapView,
+        MediaLayer,
+        ImageElement,
+        VideoElement,
+        ExtentAndRotationGeoreference,
+        Extent,
+        Slider,
+        Expand,
+        CornersGeoreference,
+        Point
+      ) => {
+
+        const mediaInfos = [
+          {
+            type: "image",
+            name: "November",
+            title: "November",
+            geoReference: {
+              bottomRight: {
+                x: 5.879440,
+                y: 52.971832
+              },
+              bottomLeft: {
+                x: 5.878146,
+                y: 52.971572
+              },
+              topRight: {
+                x: 5.878864,
+                y: 52.972850
+              },
+              topLeft: {
+                x: 5.877581,
+                y: 52.972617
+              },
+            }
+          },
+          {
+            type: "image",
+            name: "December",
+            title: "December",
+            geoReference: {
+              bottomRight: {
+                x: 5.879440,
+                y: 52.971832
+              },
+              bottomLeft: {
+                x: 5.878146,
+                y: 52.971572
+              },
+              topRight: {
+                x: 5.878864,
+                y: 52.972850
+              },
+              topLeft: {
+                x: 5.877581,
+                y: 52.972617
+              },
+            }
+          },
+          {
+            type: "image",
+            name: "February",
+            title: "February",
+            geoReference: {
+              bottomRight: {
+                x: 5.879440,
+                y: 52.971832
+              },
+              bottomLeft: {
+                x: 5.878146,
+                y: 52.971572
+              },
+              topRight: {
+                x: 5.878864,
+                y: 52.972850
+              },
+              topLeft: {
+                x: 5.877581,
+                y: 52.972617
+              },
+            }
+          },
+          {
+            type: "image",
+            name: "March",
+            title: "March",
+            geoReference: {
+              bottomRight: {
+                x: 5.879440,
+                y: 52.971832
+              },
+              bottomLeft: {
+                x: 5.878146,
+                y: 52.971572
+              },
+              topRight: {
+                x: 5.878864,
+                y: 52.972850
+              },
+              topLeft: {
+                x: 5.877581,
+                y: 52.972617
+              },
+            }
+          },
+          {
+            type: "video",
+            name: "HighResVideo",
+            title: "Video",
+            geoReference: {
+              bottomRight: {
+                x: 5.87791385769844,
+                y: 52.97134378671645
+              },
+              bottomLeft: {
+                x: 5.877317066192626,
+                y: 52.97248908996581
+              },
+              topRight: {
+                x: 5.879003505110739,
+                y: 52.971583844423286
+              },
+              topLeft: {
+                x: 5.878388608694075,
+                y: 52.97265270471572
+              },
+            }
+          }
+        ];
+
+        // create image elements for each image
+        function createImageElement(name, geoRef) {
+          const imageElement = new ImageElement({
+            image: `${name}.png`,
+            georeference: new CornersGeoreference({
+                bottomRight: new Point({
+                  x: geoRef.bottomRight.x,
+                  y: geoRef.bottomRight.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                bottomLeft: new Point({
+                  x: geoRef.bottomLeft.x,
+                  y: geoRef.bottomLeft.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                topRight: new Point({
+                  x: geoRef.topRight.x,
+                  y: geoRef.topRight.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                topLeft: new Point({
+                  x: geoRef.topLeft.x,
+                  y: geoRef.topLeft.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                })
+            })
+          });
+          return imageElement;
+        }
+
+        // create video elements for each video
+        function createVideoElement(name, geoRef) {
+          const videoElement = new VideoElement({
+            video: `${name}.MP4`,
+            georeference: new CornersGeoreference({
+                bottomRight: new Point({
+                  x: geoRef.bottomRight.x,
+                  y: geoRef.bottomRight.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                bottomLeft: new Point({
+                  x: geoRef.bottomLeft.x,
+                  y: geoRef.bottomLeft.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                topRight: new Point({
+                  x: geoRef.topRight.x,
+                  y: geoRef.topRight.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                }),
+                topLeft: new Point({
+                  x: geoRef.topLeft.x,
+                  y: geoRef.topLeft.y, 
+                spatialReference: {
+                    wkid: 4326
+                }
+                })
+            })
+          });
+          return videoElement;
+        }
+
+        let mediaElements = [];
+        // loop through images and video's and set up the corresponding object for the MediaLayer.
+        mediaInfos.forEach((media, i) => {
+          const elementDiv = document.createElement("div");
+          elementDiv.classList.add("elementDiv");
+
+          const mediaElement = {
+            name: media.name,
+            title: media.title,
+            element: media.type == "video" ? createVideoElement(media.name, media.geoReference) : createImageElement(media.name, media.geoReference)
+          };
+          mediaElements.push(mediaElement);
+
+          // create calcite checkboxes to allow users to add and remove the MediaLayers.
+          const label = document.createElement("calcite-label");
+          label.layout = "inline-space-between";
+          label.disableSpacing = true;
+          label.innerHTML = media.title;
+          const checkBox = document.createElement("calcite-checkbox");
+          checkBox.name = media.name;
+          checkBox.value = media.name;
+          checkBox.checked = true;
+
+          // Remove the media element from the MediaLayer if it exists
+          // Add the media element to the layer if it does not exist in the layer.source.elements.
+          checkBox.addEventListener("calciteCheckboxChange", (event) => {
+            const selectedImageElement = mediaElements.find(
+              (item) => item.name === event.target.name
+            );
+            if (checkBox.checked) {
+              layer.source.elements.add(selectedImageElement.element);
+            } else {
+              layer.source.elements.remove(selectedImageElement.element);
+            }
+          });
+
+          label.appendChild(checkBox);
+          const visibleDiv = document.createElement("div");
+          visibleDiv.classList.add("leftPadding", "rightPadding");
+          visibleDiv.appendChild(label);
+          document.getElementById("elementsDiv").appendChild(visibleDiv);
+
+          const slider = new Slider({
+            min: 0,
+            max: 1,
+            precision: 2,
+            container: document.createElement("div"),
+            values: [1],
+            label: media.name
+          });
+
+          slider.on("thumb-drag", (event) => {
+            const selectedImageElement = mediaElements.find(
+              (item) => item.name === slider.label
+            );
+            selectedImageElement.element.opacity = slider.values[0];
+          });
+
+          const sliderLabel = document.createElement("calcite-label");
+          sliderLabel.layout = "inline";
+          sliderLabel.innerHTML = "opacity";
+          sliderLabel.appendChild(slider.container);
+
+          const sliderDiv = document.createElement("div");
+          sliderDiv.classList.add("leftPadding");
+          sliderDiv.appendChild(sliderLabel);
+          document.getElementById("elementsDiv").appendChild(sliderDiv);
+        });
+
+        // MediaLayer - add mediaElements
+        const layer = new MediaLayer({
+          source: [
+            mediaElements[0].element,
+            mediaElements[1].element,
+            mediaElements[2].element,
+            mediaElements[3].element,
+            mediaElements[4].element
+          ],
+          opacity: 0.9,
+          title: "Blue Cycle",
+          blendMode: "normal"
+        });
+
+        const map = new Map({
+          basemap: "satellite",
+          layers: [layer]
+        });
+
+        const view = new MapView({
+          container: "mapDiv",
+          map: map,
+          zoom: 19,
+          center: [5.879, 52.972],
+        });
+
+        view.ui.add(
+          new Expand({
+            view: view,
+            expanded: true,
+            content: document.getElementById("infoDiv")
+          }),
+          "top-right"
+        );
+
+        document
+          .getElementById("layerBlending")
+          .addEventListener("calciteSwitchChange", () => {
+            layer.blendMode =
+              layer.blendMode === "normal" ? "luminosity" : "normal";
+          });
+      });
+    </script>
+  </head>
+
+  <body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - MediaLayer</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-panel
+        slot="contextual-panel"
+        id="infoDiv"
+        heading="Timeline of the Blue Cycle factory development"
+        >
+          <a href="https://www.bluecycle.frl/index.html" title="Blue Cycle" target="_blank"><img src="blue_cycle.png" id="companyLogo"/></a>
+          <br />
+          <div id="elementsDiv"></div>
+          <br />
+          <calcite-label id="layerToggle" layout="inline-space-between"
+            >Toggle layer blending<calcite-switch
+              unchecked
+              id="layerBlending"
+            ></calcite-switch>
+          </calcite-label>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
