@@ -1,0 +1,158 @@
+<!doctype html>
+
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps: Magnifier
+    </title>
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.91/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.91/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+        }
+    </style>
+    <script>
+
+        require([
+            "esri/WebMap",
+            "esri/views/MapView"
+        ],
+            function (WebMap, MapView,
+            ) {
+
+                var map = new WebMap({
+                portalItem: {
+                    // autocasts as new PortalItem()
+                    id: "de19ff6ab2014d21a76ff7faed389594"
+                }
+            });
+                // //get the map
+                // const map = new Map({
+                //     basemap: "satellite"
+                // });
+
+                const view = new MapView({
+                    container: "mapDiv",
+                    map: map,
+                    //center: [6.1, 52.51],
+                    center:[6.0970388412475405,52.509033576622734],
+                    zoom: 15
+                });
+                view.ui.add(document.getElementById("info-panel"), "top-right");
+                view.when(() => {
+                    UpdateMagnifier();
+                    view.magnifier.size = 250;
+                    view.magnifier.offset = { x: 100, y: 100 }
+                    view.on("pointer-move", (evt) => {
+                        if (!document.getElementById("staticSwitch").checked) {
+                            view.magnifier.position = { x: evt.x, y: evt.y };
+                        }
+                    });
+                });
+                document.getElementById("enableSwitch").addEventListener("calciteSwitchChange", () => { UpdateMagnifier(); });
+                document.getElementById("staticSwitch").addEventListener("calciteSwitchChange", () => { UpdateMagnifier(); });
+                document.getElementById("speedSlider").addEventListener("calciteSliderInput", () => { UpdateMagnifier(); });
+                
+                function UpdateMagnifier() {
+                    view.magnifier.visible = document.getElementById("enableSwitch").checked;
+                    view.magnifier.factor = document.getElementById("speedSlider").value;
+                    if(document.getElementById("staticSwitch").checked)
+                    {
+                        view.magnifier.position = { x: view.width/2, y:  view.height/2 };
+                        view.magnifier.offset = { x: 0, y:0 }
+                    }
+                    else
+                    {
+                        view.magnifier.offset = { x: 100, y: 100 }
+                    }
+                }
+
+            });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps: Magnifier</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <calcite-panel height-scale="l" style="width:300px;" data-panel-id="info" id="info-panel"
+            heading="Change magnification">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <calcite-label>Enabled<calcite-switch checked id="enableSwitch"></calcite-switch>
+                </calcite-label>
+                <calcite-label>Static<calcite-switch id="staticSwitch"></calcite-switch>
+                </calcite-label>
+                <calcite-label>Factor<calcite-slider label-handles min="1" value="4" max="5" id="speedSlider">
+                    </calcite-slider>
+                </calcite-label>
+
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+        </div>
+    </calcite-shell>
+
+</body>
+
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>

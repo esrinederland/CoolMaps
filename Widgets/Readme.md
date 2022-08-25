@@ -1,3 +1,15 @@
+# Magnifier
+This sample shows how to use the [magnifier](https://developers.arcgis.com/javascript/latest/api-reference/esri-views-Magnifier.html) that is embeded in the [MapView](https://developers.arcgis.com/javascript/latest/api-reference/esri-views-MapView.html#magnifier).
+
+![Magnifier](../images/20220825_Magnifier.gif)
+<br>
+<br>
+View this application live:
+[here](https://esrinederland.github.io/CoolMaps/Widgets/Magnifier.html?ref=readme)
+
+---
+<br>
+
 # Swipe
 This sample shows how to manipulate the swipe widget into an autoswipe.
 
@@ -9,6 +21,8 @@ View this application live:
 [here](https://esrinederland.github.io/CoolMaps/Widgets/AutoSwipe.html?ref=readme)
 
 
+---
+<br>
 
 # Bookmarks
 This sample shows how to use the bookmarks widget in an application.
