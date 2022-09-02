@@ -13,4 +13,4 @@ Properties supporting autocasting are indicated in the documentation with the au
 <br>
 <br>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/Autocasting/autocasting.html)
+[here](https://esrinederland.github.io/CoolMaps/Autocasting/autocasting.html?ref=readme)
