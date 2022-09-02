@@ -1,0 +1,205 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <title>JS API: ViewModel</title>
+
+    <script
+      src="https://js.arcgis.com/calcite-components/1.0.0-beta.93/calcite.esm.js"
+      type="module"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/calcite-components/1.0.0-beta.93/calcite.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.24/@arcgis/core/assets/esri/themes/light/main.css"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/next/esri/themes/light/main.css"
+    />
+  </head>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      display: flex;
+    }
+
+    calcite-loader {
+      align-self: center;
+      justify-self: center;
+    }
+
+    #header-title {
+      margin-left: 1rem;
+      margin-right: 1rem;
+    }
+
+    #info-content {
+      padding: 0.75rem;
+    }
+
+    calcite-rating {
+      margin-top: 0.25rem;
+    }
+  </style>
+
+  <script type="module">
+    import Map from "https://js.arcgis.com/4.24/@arcgis/core/Map.js";
+    import MapView from "https://js.arcgis.com/4.24/@arcgis/core/views/MapView.js";
+    import Graphic from "https://js.arcgis.com/4.24/@arcgis/core/Graphic.js";
+    import WebStyleSymbol from "https://js.arcgis.com/4.24/@arcgis/core/symbols/WebStyleSymbol.js";
+
+    const map = new Map({
+      basemap: "topo-vector",
+    });
+
+    const view = new MapView({
+      map,
+      container: "viewDiv",
+      padding: {
+        left: 49,
+      },
+      center: [6.1, 52.5],
+      zoom: 15,
+    });
+
+    view.ui.move("zoom", "bottom-right");
+
+    let activeWidget;
+
+    const handleActionBarClick = ({ target }) => {
+      if (target.tagName !== "CALCITE-ACTION") {
+        return;
+      }
+
+      if (activeWidget) {
+        document.querySelector(
+          `[data-action-id=${activeWidget}]`
+        ).active = false;
+        document.querySelector(`[data-panel-id=${activeWidget}]`).hidden = true;
+      }
+
+      const nextWidget = target.dataset.actionId;
+      if (nextWidget !== activeWidget) {
+        document.querySelector(`[data-action-id=${nextWidget}]`).active = true;
+        document.querySelector(`[data-panel-id=${nextWidget}]`).hidden = false;
+        activeWidget = nextWidget;
+      } else {
+        activeWidget = null;
+      }
+    };
+
+    document
+      .querySelector("calcite-action-bar")
+      .addEventListener("click", handleActionBarClick);
+
+    document.querySelector("calcite-shell").hidden = false;
+    document.querySelector("calcite-loader").active = false;
+
+    view.when((mapViewReady) => {
+      // First create a point geometry
+      let point = {
+        type: "point", // autocasts as new Point()
+        longitude: 6.092,
+        latitude: 52.503,
+        spatialReference: {
+          // autocast as SpatialReference
+          wkid: 4326,
+        },
+      };
+
+      //Create a symbol for drawing the point
+      let markerSymbol = {
+        // autocasts as new SimpleMarkerSymbol()
+        type: "simple-marker",
+        style: "diamond",
+        // autocasts as new Color()
+        color: [255, 128, 45],
+        outline: {
+          // autocasts as new SimpleLineSymbol()
+          style: "dash-dot",
+          // autocasts as new Color()
+          color: [0, 0, 0],
+        },
+      };
+
+      // Create a graphic and add the geometry and symbol to it
+      let pointGraphic = new Graphic({
+        geometry: point,
+        symbol: markerSymbol,
+      });
+      view.graphics.add(pointGraphic);
+    });
+  </script>
+
+  <body>
+    <calcite-loader active></calcite-loader>
+    <calcite-shell content-behind hidden>
+      <h2 id="header-title" slot="header">JavaScript API Autocasting</h2>
+
+      <calcite-shell-panel slot="primary-panel" detached>
+        <calcite-action-bar slot="action-bar">
+          <calcite-action
+            data-action-id="code"
+            icon="code"
+            text="Code"
+          ></calcite-action>
+        </calcite-action-bar>
+
+        <calcite-panel
+          heading="Code"
+          height-scale="l"
+          data-panel-id="code"
+          width-scale="l"
+        >
+          <code style="padding: 15px">
+            <div
+              style="
+                background: #ffffff;
+                overflow: auto;
+                width: auto;
+                border: solid gray;
+                border-width: 0.1em 0.1em 0.1em 0.8em;
+                padding: 0.2em 0.6em;
+              "
+            >
+              <pre
+                style="margin: 0; line-height: 125%"
+              ><span style="color: #008800; font-weight: bold">let</span> markerSymbol <span style="color: #333333">=</span> {
+   <span style="color: #888888">// autocasts as new SimpleMarkerSymbol()</span>
+   type<span style="color: #333333">:</span> <span style="background-color: #fff0f0">&quot;simple-marker&quot;</span>,
+   style<span style="color: #333333">:</span> <span style="background-color: #fff0f0">&quot;diamond&quot;</span>,
+   <span style="color: #888888">// autocasts as new Color()</span>
+   color<span style="color: #333333">:</span> [<span style="color: #0000DD; font-weight: bold">255</span>, <span style="color: #0000DD; font-weight: bold">128</span>, <span style="color: #0000DD; font-weight: bold">45</span>],
+   outline<span style="color: #333333">:</span> {
+     <span style="color: #888888">// autocasts as new SimpleLineSymbol()</span>
+     style<span style="color: #333333">:</span> <span style="background-color: #fff0f0">&quot;dash-dot&quot;</span>,
+     <span style="color: #888888">// autocasts as new Color()</span>
+     color<span style="color: #333333">:</span> [<span style="color: #0000DD; font-weight: bold">0</span>, <span style="color: #0000DD; font-weight: bold">0</span>, <span style="color: #0000DD; font-weight: bold">0</span>],
+   },
+ };
+</pre>
+            </div>
+          </code>
+        </calcite-panel>
+      </calcite-shell-panel>
+      <div id="viewDiv"></div>
+    </calcite-shell>
+  </body>
+</html>
