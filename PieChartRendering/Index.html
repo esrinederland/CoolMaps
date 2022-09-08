@@ -1,0 +1,230 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Pie charts | Sample | ArcGIS API for JavaScript 4.24</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.24/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script
+      type="module"
+      src="https://js.arcgis.com/calcite-components/1.0.0-beta.82/calcite.esm.js"
+    ></script>
+    <script
+      nomodule=""
+      src="https://js.arcgis.com/calcite-components/1.0.0-beta.82/calcite.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://js.arcgis.com/calcite-components/1.0.0-beta.82/calcite.css"
+    />
+
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+      #filter {
+        background-color: white;
+        width: 400px;
+      }
+      .btns {
+        float: right;
+        padding-top: 5px;
+      }
+      #error {
+        color: red;
+        display: none;
+      }
+    </style>
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Legend",
+        "esri/widgets/Expand"
+      ], (Map, MapView, FeatureLayer, Legend, Expand) => {
+        const map = new Map({
+          basemap: "dark-gray-vector"
+        });
+        const view = new MapView({
+          map: map,
+          container: "viewDiv",
+          center: [6.1, 52.5],
+          zoom: 14
+        });
+        const layer = new FeatureLayer({
+          portalItem: {
+            id: "2b11ecc6b0874b9da2f1f5f88fec2cc1"
+          },
+          maxScale : 0,
+          minScale : 0,
+          renderer: {
+            type: "pie-chart", // autocasts as new PieChartRenderer
+            size: 100,
+            attributes: [
+              {
+                field: "p_00_14_jr",
+                color: "#d01c8b",
+                label: "0 tot 15 jaar"                
+              },
+              {
+                field: "p_15_24_jr",
+                color: "#f1b6da",
+                label: "15 tot 25 jaar"
+              },
+              {
+                field: "p_25_44_jr",
+                color: "#f7f7f7",
+                label: "25 tot 45 jaar"
+              },
+              {
+                field: "p_45_64_jr",
+                color: "#b8e186",
+                label: "45 tot 65 jaar"
+              },
+              {
+                field: "p_65_eo_jr",
+                color: "#4dac26",
+                label: "65 jaar en ouder"
+              }
+            ],
+            backgroundFillSymbol: {
+              color: [0, 0, 0, 0],
+              outline: {
+                width: 0,
+                color: [255, 255, 255, 0]
+              }
+            },
+            outline: {
+              width: 1.5,
+              color: "grey"
+            },
+            visualVariables: [
+              {
+                type: "size",
+                valueExpression:
+                  "$feature.aantal_hh",
+                minDataValue: 1,
+                maxDataValue: 10000,
+                minSize: 50,
+                maxSize: 150
+              },
+              {
+                type: "opacity",
+                valueExpression: "$feature.aantal_hh",
+                stops: [
+                    { value: 0, opacity: 0.0 },
+                    { value: 49, opacity: 0.0 },
+                    { value: 50, opacity: 1 },
+                    { value: 50000, opacity: 1 }
+                ]
+              }
+            ]
+          },
+          popupTemplate: {
+            title: "{bu_naam}",
+            content: [
+              {
+                type: "media",
+                mediaInfos: [
+                  {
+                    title: "Inwoners percentage van {bu_naam} naar leeftijd",
+                    type: "pie-chart",
+                    value: {
+                      fields: ["p_00_14_jr", "p_15_24_jr", "p_25_44_jr", "p_45_64_jr", "p_65_eo_jr"]
+                    }
+                  }
+                ]
+              },
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "p_00_14_jr",
+                    label: "0 tot 15 jaar",
+                    format: {
+                      digitSeparator: true
+                    }
+                  },
+                  {
+                    fieldName: "p_15_24_jr",
+                    label: "15 tot 25 jaar",
+                    format: {
+                      digitSeparator: true
+                    }
+                  },
+                  {
+                    fieldName: "p_25_44_jr",
+                    label: "25 tot 45 jaar",
+                    format: {
+                      digitSeparator: true
+                    }
+                  },
+                  {
+                    fieldName: "p_45_64_jr",
+                    label: "45 tot 65 jaar",
+                    format: {
+                      digitSeparator: true
+                    }
+                  },
+                  {
+                    fieldName: "p_65_eo_jr",
+                    label: "65 jaar en ouder",
+                    format: {
+                      digitSeparator: true
+                    }
+                  },
+                  {
+                    fieldName: "aant_inw",
+                    label: "Totaal inwoners"
+                  }
+                ]
+              }
+            ],
+            fieldInfos: [
+              {
+                fieldName: "p_00_14_jr",
+                label: "0 tot 15 jaar"
+              },
+              {
+                fieldName: "p_15_24_jr",
+                label: "15 tot 25 jaar"
+              },
+              {
+                fieldName: "p_25_44_jr",
+                label: "25 tot 45 jaar"
+              },
+              {
+                fieldName: "p_45_64_jr",
+                label: "45 tot 65 jaar"
+              },
+              {
+                fieldName: "p_65_eo_jr",
+                label: "65 jaar en ouder"
+              }
+            ]
+          }
+        });
+        map.add(layer);
+      });
+    </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
