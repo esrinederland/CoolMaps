@@ -11,4 +11,4 @@ The PieChartRenderer allows you to visualize multiple attribute values of a feat
 <br>
 <br>
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/PieChartRendering/Index.html)
+[here](https://esrinederland.github.io/CoolMaps/PieChartRendering/Index.html?ref=Readme)
