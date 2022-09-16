@@ -11,4 +11,4 @@ Use the ArcGIS API for JavaScript to embed a map and your route information on y
 <br>
 
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/EmbeddedMapWithRoute/index.html)
+[here](https://esrinederland.github.io/CoolMaps/EmbeddedMapWithRoute/index.html?ref=readme)
