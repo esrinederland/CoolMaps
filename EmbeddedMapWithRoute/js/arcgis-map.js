@@ -1,4 +1,4 @@
-require(["esri/config", "esri/Map", "esri/views/MapView", "esri/widgets/Fullscreen", "esri/layers/RouteLayer"], (Map, MapView, Fullscreen, RouteLayer) => {
+require(["esri/Map", "esri/views/MapView", "esri/widgets/Fullscreen", "esri/layers/RouteLayer"], (Map, MapView, Fullscreen, RouteLayer) => {
 
     // Get the route layer
     const routeLayer = new RouteLayer({
