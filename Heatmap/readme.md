@@ -10,7 +10,7 @@ As an alternative, a static heatmaps allow you to persist the visual density's o
 
 ## App
 
-![Screenshot heatmapp renderer](./Heatmaps.gif)
+![Screenshot heatmapp renderer](./images/Heatmaps.gif)
 <br>
 <br>
 View this example live:
