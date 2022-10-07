@@ -1,0 +1,152 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>
+        #CoolMap: Extent Map
+    </title>
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.94/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.94/calcite.css" />
+
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/widgets/Expand",
+        "esri/geometry/projection",
+        "esri/widgets/Search"
+      ], (Map, MapView, Expand,projection,Search) => {
+
+        const map = new Map({
+          basemap:"topo-vector"
+        });
+
+        const view = new MapView({
+          container: "mapDiv",
+          center: [6.1, 52.5],
+          zoom: 14,
+          map
+        });
+
+        const search = new Search({view:view});
+        const searchExpand = new Expand({content:search});
+        view.ui.add(searchExpand,"top-left");
+        
+        view.ui.add(document.getElementById("info-panel"), "top-right");
+        
+        view.watch("updating, interacting",(newvalue,old,name)=>{
+          //console.log(`${name}: ${newvalue}`);
+          //only update the extents when the view is done updating or done with interacting
+          if(!newvalue)
+          {
+            UpdateExtents(view.extent)
+          }
+        });
+        //pre-load the projection class 
+        projection.load();
+        
+        function UpdateExtents(newExtentWM)
+        {
+          console.log(newExtentWM.toJSON());
+
+          //project to WGS84 (4326)
+          var newExtentWGS = projection.project(newExtentWM,{"wkid":4326});
+          //project the extent to RijksDriehoek Stelsel (28992)
+          var newExtentRD = projection.project(newExtentWM,{"wkid":28992});
+
+          //update the panel contents
+          document.getElementById('extentJsonWM').innerHTML = JSON.stringify(newExtentWM.toJSON(),null,2);
+          document.getElementById('extentJsonWGS').innerHTML = JSON.stringify(newExtentWGS.toJSON(),null,2);
+          document.getElementById('extentJsonRD').innerHTML = JSON.stringify(newExtentRD.toJSON(),null,2);
+        }
+
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMap: Extent Map</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <calcite-panel height-scale="l" style="width:300px;" data-panel-id="info" id="info-panel" heading="Current Extent">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <pre>Web Mercator:
+<span id="extentJsonWM"></span></pre>
+                <pre>WGS48:
+<span id="extentJsonWGS"></span></pre>
+                <pre>RD:
+<span id="extentJsonRD"></span></pre>
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+        </div>
+    </calcite-shell>
+  </body>
+
+  <script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+</html>
