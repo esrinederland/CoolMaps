@@ -1,0 +1,319 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>
+    #CoolMap: DriveTime Analysis
+  </title>
+  <style>
+    html,
+    body,
+    #mapDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #header {
+      padding-left: 10px;
+      background-color: var(--calcite-ui-brand);
+      border-bottom: solid 1px var(--calcite-ui-brand-press);
+      color: var(--calcite-ui-foreground-3);
+    }
+
+    #footer {
+      padding: 10px 5px 10px 5px;
+      background-color: var(--calcite-ui-background);
+      border-top: solid 1px var(--calcite-ui-border-1);
+
+    }
+
+    /*Remove the black bar from the map*/
+    #mapDiv .esri-view-surface:focus::after {
+      outline: auto 0px !important;
+    }
+
+    .esri-logo {
+      margin: 0.375 rem;
+      content: "";
+      display: inline-block;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      min-height: 30px;
+      min-width: 70px;
+      line-height: 0;
+      background-size: 100% 100%;
+      background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+    }
+
+    /*on a black theme change the logo*/
+    .calcite-theme-dark .esri-logo {
+      background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+    }
+  </style>
+  <script src="initBerlin.js"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.24/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.css" />
+
+  <script>
+    require([
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/widgets/Expand",
+      "esri/widgets/Search",
+      "esri/geometry/Polygon",
+
+      "esri/rest/networkService",
+      "esri/Graphic",
+      "esri/rest/support/ServiceAreaParameters",
+      "esri/rest/support/FeatureSet",
+      "esri/rest/serviceArea",
+
+      "esri/core/reactiveUtils",
+      "esri/layers/GraphicsLayer"
+    ], (WebMap, MapView, Expand, Search, Polygon,
+      networkService, Graphic, ServiceAreaParameters, FeatureSet, serviceArea,
+      reactiveUtils, GraphicsLayer) => {
+
+      const map = new WebMap({
+        portalItem: { id: "7202fa6135bf4082b717db3976880650" }
+      });
+
+      const view = new MapView({
+        container: "mapDiv",
+        map
+      });
+
+      const search = new Search({ view: view });
+      const searchExpand = new Expand({ content: search });
+      view.ui.add(searchExpand, "top-left");
+
+      view.ui.add(document.getElementById("info-panel"), "top-right");
+
+
+
+      //api key for mvanhulzen_esrinl
+      var apiKey = "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l"
+      var routeServiceUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/ServiceAreas/NAServer/ServiceArea_World";
+      var travelMode = null;
+      var loadComplete = false;
+      var graphicsItems = [];
+
+      view.when(() => {
+
+
+        // get the travel mode from the service
+        networkService.fetchServiceDescription(routeServiceUrl, apiKey).then((result) => {
+
+          travelMode = result.supportedTravelModes.find(
+            (travelMode) => travelMode.name === "Walking Time"
+          );
+          console.log("load complete");
+
+          //if the travelmode is found set the loadComplete to true so the art can start
+          loadComplete = true;
+        });
+
+        var initialPolygon = new Polygon(initBerlin);
+        //get feature layers
+        var travelLayers = view.map.allLayers.items.filter(function (layer) {
+          return layer.title.startsWith("Polygon layer");
+        });
+
+        for (var fLayer of travelLayers) {
+          //craete a graphics layer for each layer with the effects and blendmodes from the featurelayer
+          var graphicsLayer = new GraphicsLayer();
+
+          graphicsLayer.effect = fLayer.effect;
+          graphicsLayer.blendMode = fLayer.blendMode;
+
+          //creata a graphic for the layer with the symbol of the simple renderer of the featurelayer
+          var symbol = fLayer.renderer.symbol;
+          var tempGraphic = new Graphic({
+            geometry: initialPolygon,
+            symbol: symbol
+          });
+          graphicsLayer.add(tempGraphic);
+
+          //get the parent of the layer (two of them are in a grouplayer)
+          var parent = fLayer.parent;
+          //in the grouplayers the index to add the graphicslayer is 1
+          var index = 1;
+
+          // //this layer is not in a grouplayer, the index should be 0 (layer should be on top)
+          // if (fLayer.title == "Reistijd_analyse_15_minuten_1") {
+          //   console.log("no parent, adding to map");
+          //   parent = view.map;
+          //   index = 0;
+          // }
+          //save the graphicslayers for use in the drivetimeart function
+          graphicsItems.push({
+            layer: graphicsLayer,
+            symbol: symbol
+          });
+          //add the graphicslayer to the map (or grouplayer)
+          parent.add(graphicsLayer, index);
+          //remove the featurelayer (we don't need it anymore)
+          parent.remove(fLayer);
+
+        }
+
+        console.log(view.map.layers.items[0].title);
+        var layer = view.map.allLayers.find((x) => x.title === "OSMPOI");
+        console.log(layer);
+        view.whenLayerView(layer).then((layerView) => {
+          console.log("layerview created");
+          reactiveUtils.whenOnce(() => !layerView.updating).then(() => {
+            console.log("layerview done updating");
+            AddAndCalculatePolygon(initialPolygon);
+          });
+
+        });
+
+      });
+
+      // handle the map onclick events
+      view.on("click", (click_evt) => {
+
+        //create the art on the map
+        CreateDriveTimeAnalysis(click_evt.mapPoint);
+      });
+
+      function CreateDriveTimeAnalysis(mapPoint) {
+        //only start the process if the load is complete (traveltimes have been fetched and layers have been created)
+        if (loadComplete) {
+          // create a graphic to show an the map and use as input 
+          const start = new Graphic({
+            geometry: mapPoint,
+            symbol: {
+              type: "simple-marker",
+              color: "white",
+              size: 8
+            }
+          });
+          // add the graphic to the view
+          view.graphics.removeAll();
+          view.graphics.add(start);
+
+          // create the service area parameters
+          const serviceAreaParameters = new ServiceAreaParameters({
+            apiKey: apiKey,
+            facilities: new FeatureSet({
+              features: [start]
+            }),
+            defaultBreaks: [10],
+            travelMode: travelMode,
+            travelDirection: "from-facility",
+            outSpatialReference: view.spatialReference
+
+          });
+          // solve the service area
+          // console.log("parameters: ", serviceAreaParameters);
+          serviceArea.solve(routeServiceUrl, serviceAreaParameters).then((serviceAreaSolveResult) => {
+            console.log("serviceAreaSolveResult", serviceAreaSolveResult);
+            // get the polygon, set it as the geometry on the graphic in the tree graphics layser
+            const serviceAreaPolygon = serviceAreaSolveResult.serviceAreaPolygons[0].geometry;
+            AddAndCalculatePolygon(serviceAreaPolygon)
+            // zoom to the service area polygon
+
+            AddAction("GeneratedDriveTimeAnalysis")
+
+          });
+        }
+      }
+      function AddAndCalculatePolygon(polygon) {
+        // let driveGraphic = new Graphic({
+        //   geometry: polygon,
+        //   symbol: {
+        //     type: "simple-fill",
+        //     outline: { width: 1.25, color: [235, 25, 25, 1] },
+        //     color: [107, 242, 121, 0.25]
+        //   }
+        // });
+        // view.graphics.add(driveGraphic);
+        for (var gi of graphicsItems) {
+          gi.layer.graphics.items[0].geometry = polygon;
+        }
+
+        //get layerview
+        var lv = view.allLayerViews.find((x) => x.layer.title === "OSMPOI");
+
+
+
+        //make query
+        var query = {
+          outStatistics: {
+            onStatisticField: "fclass",  // service field for 2015 population
+            outStatisticFieldName: "fclass_count",
+            statisticType: "count"
+          },
+          groupByFieldsForStatistics: "fclass",
+          geometry: polygon
+        }
+
+        //query layerview
+        lv.queryFeatures(query).then((results) => {
+          //show results
+          var spanContents = "<table>";
+          document.getElementById("results").innerHTML = '';
+          for (feature of results.features) {
+            atts = feature.attributes;
+            const label = document.createElement("calcite-label");
+            label.layout = "inline-space-between";
+            label.innerText = `${atts.fclass.replace('_', ' ').replace(/(^\w)/g, m => m.toUpperCase())}`;
+            label.scale = "s"
+            const span = document.createElement("span");
+            span.id = "detail-type";
+            span.innerText = `${atts.fclass_count}`;
+            label.append(span);
+
+            document.getElementById("results").appendChild(label);
+            spanContents += `<tr><td>${atts.fclass.replace('_', ' ').replace(/(^\w)/g, m => m.toUpperCase())} </td><td> ${atts.fclass_count}</td></tr>`
+
+          }
+          spanContents += "</table>"
+          //document.getElementById("results").childNodes.removeAll();.innerHTML = spanContents
+
+
+          console.log(results);
+        });
+        view.goTo(polygon.extent.expand(1.5));
+
+      }
+
+    });
+  </script>
+</head>
+
+<body>
+  <!-- shell will provide main app layout -->
+  <calcite-shell content-behind>
+    <!-- custom header for the shell -->
+    <div slot="header" id="header">
+      <h2 id="header-title">#CoolMap: DriveTime Analysis</h2>
+    </div>
+
+    <div id="mapDiv"></div>
+
+    <calcite-panel height-scale="l" style="width:150px;" data-panel-id="info" id="info-panel" heading="Food and Drinks">
+      <div id="info-container" class="info-container" style="padding: 1rem;">
+        <span id="results"></span>
+      </div>
+    </calcite-panel>
+
+    <!-- custom footer for the shell -->
+    <div slot="footer" id="footer">
+      <div class="esri-logo"></div>
+    </div>
+    </div>
+  </calcite-shell>
+</body>
+
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
