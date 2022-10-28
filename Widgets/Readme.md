@@ -1,3 +1,13 @@
+# Scalebar
+This sample shows the different scalebar options and a way to customize the style of the scalebar.
+![Scalebar](../images/20221028_Scalebars.png)
+<br>
+<br>
+View this sample live [here](https://esrinederland.github.io/CoolMaps/Widgets/ScalebarTypes.html?ref=readme)
+
+---
+<br>
+
 # Magnifier
 This sample shows how to use the [magnifier](https://developers.arcgis.com/javascript/latest/api-reference/esri-views-Magnifier.html) that is embeded in the [MapView](https://developers.arcgis.com/javascript/latest/api-reference/esri-views-MapView.html#magnifier).
 

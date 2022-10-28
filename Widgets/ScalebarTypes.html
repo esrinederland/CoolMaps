@@ -1,0 +1,181 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>
+        #CoolMap: Scalebar Widget
+    </title>
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+        /*Remove the black bar from the map*/
+        #mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+        }
+
+
+        #CustomScalebar .esri-scale-bar__ruler-block {
+            background-color: #ff6300;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.css" />
+
+    <script>
+        //api key for mvanhulzen_esrinl
+        var esriConfig = {
+            apiKey: "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l"
+        };
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/widgets/Expand",
+            "esri/widgets/ScaleBar"
+        ], (Map, MapView, Expand, ScaleBar) => {
+
+            const map = new Map({
+                basemap: "arcgis-topographic"
+            });
+
+            const view = new MapView({
+                container: "mapDiv",
+                map: map,
+                center: [6.1, 52.5],
+                zoom: 11
+            });
+
+            var codeExpand = new Expand({
+                expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+                view: view,
+                content: document.getElementById("info-panel"),
+                expanded: true
+            });
+            //add the panel to the UI
+            view.ui.add(codeExpand, "bottom-right");
+
+
+            //the default scalebar
+            var sb1 = new ScaleBar({
+                view: view
+            })
+            view.ui.add(sb1, "bottom-left");
+
+            //a scalebar with metric units
+            var sb2 = new ScaleBar({
+                unit: "metric",
+                view: view
+            })
+            view.ui.add(sb2, "bottom-left");
+
+            //scalebar with metric units and a rule type
+            var sb3 = new ScaleBar({
+                unit: "metric",
+                style: "ruler",
+                view: view
+            })
+            view.ui.add(sb3, "bottom-left");
+            
+            //scalebar with metric and non-metric units, style will always be line
+            var sb4 = new ScaleBar({
+                unit: "dual",
+                view: view
+            })
+            view.ui.add(sb4, "bottom-left");
+
+            //a custom container with an id, so we can pinpoint this scalebar with css and style it
+            var customContainer = document.createElement("div");
+            customContainer.id = "CustomScalebar"
+            
+            var sb5 = new ScaleBar({
+                unit: "metric",
+                style: "ruler",
+                view: view,
+                container: customContainer
+            })
+            view.ui.add(customContainer, "bottom-left");
+        });
+    </script>
+</head>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMap: Scalebar Widget</h2>
+        </div>
+
+        <div id="mapDiv"></div>
+
+        <calcite-panel height-scale="l" style="width:470px;" data-panel-id="info" id="info-panel"
+            heading="Example code">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+<!-- HTML generated using hilite.me --><div style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;"><pre style="margin: 0; line-height: 125%"><span style="color: #0000ff">var</span> customContainer = document.createElement(<span style="color: #a31515">&quot;div&quot;</span>);
+customContainer.id = <span style="color: #a31515">&quot;CustomScalebar&quot;</span>
+
+<span style="color: #0000ff">var</span> sb5 = <span style="color: #0000ff">new</span> ScaleBar({
+    unit: <span style="color: #a31515">&quot;metric&quot;</span>,
+    style: <span style="color: #a31515">&quot;ruler&quot;</span>,
+    view: view,
+    container: customContainer
+})
+view.ui.add(customContainer, <span style="color: #a31515">&quot;bottom-left&quot;</span>);
+</pre></div>
+    
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+        </div>
+    </calcite-shell>
+</body>
+
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
