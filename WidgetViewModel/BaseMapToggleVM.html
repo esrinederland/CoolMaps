@@ -1,0 +1,213 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>
+    #CoolMap: Widget ViewModel
+  </title>
+  <style>
+    html,
+    body,
+    #mapDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #header {
+      padding-left: 10px;
+      background-color: var(--calcite-ui-brand);
+      border-bottom: solid 1px var(--calcite-ui-brand-press);
+      color: var(--calcite-ui-foreground-3);
+    }
+
+    #footer {
+      padding: 10px 5px 10px 5px;
+      background-color: var(--calcite-ui-background);
+      border-top: solid 1px var(--calcite-ui-border-1);
+
+    }
+
+    /*Remove the black bar from the map*/
+    #mapDiv .esri-view-surface:focus::after {
+      outline: auto 0px !important;
+    }
+
+    calcite-button {
+
+      height: 44px;
+      margin-bottom: 2px;
+    }
+
+    .esri-logo {
+      margin: 0.375 rem;
+      content: "";
+      display: inline-block;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      min-height: 30px;
+      min-width: 70px;
+      line-height: 0;
+      background-size: 100% 100%;
+      background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo.svg);
+    }
+
+    /*on a black theme change the logo*/
+    .calcite-theme-dark .esri-logo {
+      background-image: url(https://esrinederland.github.io/CoolMaps/images/esri-logo-reversed.svg);
+    }
+
+    /*
+        * Hide the default Powered by Esri text
+        */
+    .esri-attribution__powered-by {
+      display: none;
+    }
+
+    /*
+        * Style the node.
+        */
+    .esri-powered-by__text {
+      display: none;
+    }
+
+    .esri-powered-by,
+    .esri-powered-by__image {
+      display: block;
+      width: 59px;
+      height: 35px;
+    }
+  </style>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.24/"></script>
+  <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.95/calcite.css" />
+
+  <script>
+    esriConfig = { apiKey: "AAPK8195e5c382714413afffd8786a2e81963znoAuzAUh82CmnUyvKuggBmE5U18ISQBp-0lvE92yPTzQn1MGZRRK3feyk3VS5l" }
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/widgets/Expand",
+      "esri/widgets/Search",
+      "esri/widgets/BasemapToggle/BasemapToggleViewModel"
+    ], (Map, MapView, Expand, Search, BasemapToggleViewModel) => {
+
+      const map = new Map({
+        basemap: "arcgis-topographic"
+      });
+
+      const view = new MapView({
+        container: "mapDiv",
+        map: map,
+        center: [6.1, 52.5],
+        zoom: 12
+      });
+      var powered_by = document.getElementById('esri-powered-by-widget');
+      view.ui.add(powered_by, 'bottom-right');
+    
+      const search = new Search({ view: view });
+      const searchExpand = new Expand({ content: search });
+      view.ui.add(searchExpand, "top-left");
+
+      view.ui.add(document.getElementById("info-panel"), "top-right");
+      var codeExpand = new Expand({
+        expandIconClass: "esri-icon-documentation", //using an icon class from: https://developers.arcgis.com/javascript/latest/esri-icon-font/
+        view: view,
+        content: document.getElementById("code-panel"),
+        expanded: true,
+        expandTooltip:"Show example code"
+      });
+
+      //add the panel to the UI
+      view.ui.add(codeExpand, "top-left");
+
+      //Create the ViewModel (and only the viewmodel)
+      var bmtVM = new BasemapToggleViewModel({
+        view: view,
+        nextBasemap: "arcgis-imagery"
+      })
+      //get the toggle button
+      var toggleButton = document.getElementById("toggleButton");
+
+      toggleButton.addEventListener("click", () => {
+        //call the toggle function on the viewmodel
+        bmtVM.toggle();
+        AddAction("bm toggled", bmtVM.nextBasemap.title);
+      });
+
+      //watching when the state changes
+      bmtVM.watch("state", (newValue) => {
+        console.log("state changed:", newValue);
+      });
+
+
+    });
+  </script>
+</head>
+
+<body>
+  <!-- shell will provide main app layout -->
+  <calcite-shell content-behind>
+    <!-- custom header for the shell -->
+    <div slot="header" id="header">
+      <h2 id="header-title">#CoolMap: Widget ViewModel</h2>
+    </div>
+
+    <div id="mapDiv"></div>
+
+    <calcite-panel height-scale="l" style="width:150px;" data-panel-id="info" id="info-panel" heading="Toggle Basemap">
+      <div id="info-container" class="info-container" style="padding: 1rem;">
+        <calcite-button id="toggleButton" scale="m">Toggle Basemap</calcite-button>
+
+      </div>
+    </calcite-panel>
+
+    <calcite-panel height-scale="l" style="width:470px;" data-panel-id="code" id="code-panel" heading="Example code">
+      <div id="info-container" class="info-container" style="padding: 1rem;">
+        <!-- HTML generated using hilite.me -->
+        <div
+          style="background: #ffffff; overflow:auto;width:auto;border:solid gray;border-width:.1em .1em .1em .8em;padding:.2em .6em;">
+          <pre style="margin: 0; line-height: 125%"><span style="color: #008000">//Create the ViewModel (and only the viewmodel)</span>
+<span style="color: #0000ff">var</span> bmtVM = <span style="color: #0000ff">new</span> BasemapToggleViewModel({
+  view: view,
+  nextBasemap: <span style="color: #a31515">&quot;arcgis-imagery&quot;</span>
+})
+<span style="color: #008000">//get the toggle button</span>
+<span style="color: #0000ff">var</span> toggleButton = document.getElementById(<span style="color: #a31515">&quot;toggleButton&quot;</span>);
+
+toggleButton.addEventListener(<span style="color: #a31515">&quot;click&quot;</span>, () =&gt; {
+  <span style="color: #008000">//call the toggle function on the viewmodel</span>
+  bmtVM.toggle();
+});
+</pre>
+        </div>
+
+
+      </div>
+    </calcite-panel>
+
+    <!-- custom footer for the shell -->
+    <div slot="footer" id="footer">
+      <div class="esri-logo"></div>
+    </div>
+    </div>
+  </calcite-shell>
+  <!-- This node will be retrieved and added to the view. -->
+  <div class="esri-powered-by-widget" id="esri-powered-by-widget">
+    <a class="esri-powered-by" href="http://esri.nl" target="_blank" title="Powered 
+by Esri." aria-label="Powered by Esri. Visit to esri.nl in a new window.">
+      <span class="esri-powered-by__text">Powered by Esri</span>
+      <img class="esri-powered-by__image" src="../images/powered_by_esri_logo.svg" alt="Esri L
+ogo" aria-label="Esri logo">
+    </a>
+  </div>
+</body>
+
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
