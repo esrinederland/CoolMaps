@@ -5,4 +5,4 @@ This sample shows the new (since ArcGIS JS 4.25) basemaps: the Human Geography B
 
 
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/Basemaps/HumanGeographyBasemap.html?ref=readme)
+[here](https://esrinederland.github.io/CoolMaps/BaseMaps/HumanGeographyBasemap.html?ref=readme)
