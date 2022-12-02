@@ -1,0 +1,333 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolIdea - LocalStream</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.25/"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px var(--calcite-ui-brand-press);
+            color: var(--calcite-ui-foreground-3);
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+
+        .styled-table {
+            border-collapse: collapse;
+            margin: 25px 0;
+
+            min-width: 100%;
+            font-size: 14px;
+            font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            line-height: 1.3em;
+
+        }
+
+        .styled-table thead tr {
+            background-color: var(--calcite-ui-brand);
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 5px 3px;
+        }
+
+        .styled-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .styled-table tbody tr:nth-of-type(even) {
+            background-color: #f3f3f3;
+        }
+
+        .styled-table tbody tr:last-of-type {
+            border-bottom: 2px solid var(--calcite-ui-brand);
+        }
+    </style>
+
+    <script>
+        require(["esri/Map", "esri/views/MapView",  "esri/widgets/Expand", "esri/Graphic"], (Map, MapView,  Expand, Graphic) => {
+            const map = new Map({
+                basemap: "topo-vector"
+            });
+            var doContinue = false;
+            const view = new MapView({
+                container: "mapDiv", // Reference to the view div created in step 5
+                map: map, // Reference to the map object created before the view
+                zoom: 16, // Sets zoom level based on level of detail (LOD)
+                center: [6.09, 52.502] // Sets center point of view using longitude,latitude
+            });
+           
+            view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "top-right");
+            
+            document.getElementById("go-button").addEventListener("click", async () => {
+             
+                if (doContinue) {
+                    doContinue = false;
+                    view.graphics.removeAll();
+                    document.getElementById("go-button").innerHTML = "Go";
+
+                }
+                else {
+                    AddAction("StartEngine");
+                    doContinue = true;
+                    document.getElementById("go-button").innerHTML = "Stop";
+                    StartMovement();
+                }
+            });
+
+
+            async function StartMovement() {
+                var result = await fetch("Rondje_zwolle_168.csv");
+                
+                var data = await result.text();
+                console.log(data);
+                //split data
+                var datalist = data.split("\n");
+                console.log(datalist);
+                datalist = datalist.splice(1);//remove the heading
+                //create list
+                var routePoints = datalist.map(function (line) {
+                    let lineitems = line.trim().split(",");
+                    return {
+                        carid: parseInt(lineitems[0]),
+                        pointid: parseInt(lineitems[1]),
+                        lon: parseFloat(lineitems[2]),
+                        lat: parseFloat(lineitems[3]),
+                        elevation: parseFloat(lineitems[4]),
+                        speed: parseFloat(lineitems[5]),
+                        sat: parseInt(lineitems[6]),
+                        heading: parseFloat(lineitems[7])
+                    };
+                });
+            //    console.log(routePoints);
+            
+                let symbol = {
+                    type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+                    style: "triangle",
+                    color: "blue",
+                    size: "14px",  // pixels
+                    outline: {  // autocasts as new SimpleLineSymbol()
+                        color: [255, 255, 0],
+                        width: 2  // points
+                    }
+                };
+                var graphic = new Graphic({ geometry: { type: "point", longitude: 6.09, latitude: 52.502 }, symbol: symbol, attributes: { currentPosition: 0 } });
+                view.graphics.add(graphic);
+                //start ticker and move geometry
+                var pointIndex = 0;
+
+                var speedSlider = document.getElementById("speedSlider")
+                var sliderValues = { 0: 2000, 1: 1000, 2: 500, 3: 250, 4: 100 }
+                while (doContinue) {
+                    var duration = sliderValues[speedSlider.value];
+
+                    console.log(`duration: ${duration}ms`)
+                    movePointForward(graphic, routePoints, duration *4);
+
+                    await sleep(duration);
+                }
+            }
+
+            function sleep(ms) {
+                // add ms millisecond timeout before promise resolution
+                return new Promise(resolve => setTimeout(resolve, ms))
+            }
+            function movePointForward(graphic, routePoints, animationDuration) {
+                var currentPos = graphic.attributes.currentPosition;
+                currentPos++;
+                if (currentPos >= routePoints.length) {
+                    currentPos = 0
+                }
+
+                graphic.attributes.currentPosition = currentPos;
+
+                var routePoint = routePoints[currentPos]
+
+                graphic.geometry = { type: "point", longitude: routePoint.lon, latitude: routePoint.lat };
+
+                var centervehicle = document.getElementById("center-switch").checked;
+                var turnmap = document.getElementById("turn-switch").checked;
+                var zoommap = document.getElementById("zoom-switch").checked;
+
+                var gotoObject = {}
+                if (centervehicle) {
+                    gotoObject.center = graphic.geometry;
+                }
+                else {
+                    gotoObject.center = view.center;
+                }
+                if (turnmap) {
+                    var newRotation = routePoint.heading - 180;
+                    var rotationDelta = Math.abs(view.rotation - newRotation);
+                    //console.log(`Rotationdelta on point id: ${currentPos}: ${rotationDelta}`);
+
+                    if ((rotationDelta > 10 && rotationDelta < 350) || rotationDelta > 370 || routePoint.speed > 100) {
+                        gotoObject.rotation = newRotation;
+                    }
+                    graphic.symbol.angle = 0;
+                }
+                else {
+                    gotoObject.rotation = 0;
+                    graphic.symbol.angle = (180 - routePoint.heading);
+                }
+                if (zoommap) {
+
+                    if (routePoint.speed > 100) {
+                        gotoObject.scale = 11000;
+                    }
+                    else if (routePoint.speed <= 100 && routePoint.speed > 70) {
+                        gotoObject.scale = 9000;
+                    }
+                    else if (routePoint.speed <= 70 && routePoint.speed > 60) {
+                        gotoObject.scale = 5000;
+                    }
+                    else if (routePoint.speed <= 60 && routePoint.speed > 30) {
+                        gotoObject.scale = 4000;
+                    }
+                    else {
+                        gotoObject.scale = 2000;
+                    }
+                    // console.log(`new scale: ${gotoObject.scale}`)
+                }
+                if(zoommap || turnmap || centervehicle)
+                {
+                    view.goTo(gotoObject, { duration: animationDuration })
+                }
+                
+                document.getElementById("sp_speed").innerHTML = Math.round(routePoint.speed*10)/10;
+                document.getElementById("sp_x").innerHTML = routePoint.lon;
+                document.getElementById("sp_y").innerHTML = routePoint.lat;
+                document.getElementById("sp_z").innerHTML = routePoint.elevation;
+                document.getElementById("sp_heading").innerHTML = Math.round(routePoint.heading*10)/10;
+                document.getElementById("sp_sat").innerHTML = routePoint.sat;
+
+            }
+
+
+        });
+    </script>
+</head>
+
+</html>
+
+<body>
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Zooming and Rotating map</h2>
+        </div>
+        <div id="mapDiv" class="mapdiv"></div>
+        <calcite-panel height-scale="l" style="width:400px;" data-panel-id="info" id="info-panel"
+            heading="Start Your Engines...">
+            <div id="info-container" class="info-container" style="padding: 1rem;">
+                <calcite-button id="go-button" style="height:32px;width:100%;margin-top:-0.75rem;margin-bottom: 10px;">
+                    Go</calcite-button>
+
+                <calcite-label>Simulator speed
+                    <calcite-slider max="4" id="speedSlider" value=2></calcite-slider>
+                </calcite-label>
+                <calcite-label>Center on vehicle<calcite-switch id="center-switch"></calcite-switch>
+                </calcite-label>
+                <calcite-label>Turn Map<calcite-switch id="turn-switch"></calcite-switch>
+                </calcite-label>
+                <calcite-label>Zoom Map based on speed<calcite-switch id="zoom-switch"></calcite-switch>
+                </calcite-label>
+                <div id="infoNumbers">
+                    <table class="styled-table">
+                        <thead>
+                        <tr><th colspan="2">Vehicle info</th></tr>
+                        </thead>
+
+                        <tr>
+                            <td style="width: 180px;">Vehicle speed:</td>
+                            <td><span id="sp_speed"></span> km/h</tdd>
+                        </tr>
+                        <tr>
+                            <td>X:</td>
+                            <td><span id="sp_x"></span></tdd>
+                        </tr>
+                        <tr>
+                            <td>Y:</td>
+                            <td><span id="sp_y"></span></tdd>
+                        </tr>
+                        <tr>
+                            <td>Z:</td>
+                            <td><span id="sp_z"></span></tdd>
+                        </tr>
+                        <tr>
+                            <td>Heading:</td>
+                            <td><span id="sp_heading"></span></tdd>
+                        </tr>
+                        <tr>
+                            <td>Satellite count:</td>
+                            <td><span id="sp_sat"></span></tdd>
+                        </tr>
+                    </table>
+                    
+
+                </div>
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
