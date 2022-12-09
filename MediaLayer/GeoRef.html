@@ -1,0 +1,419 @@
+<head>
+  <meta charset="utf-8">
+  <meta content="IE=edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+  <title>#CoolMaps - Client side GeoReferencing</title>
+
+  <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+  <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.25/"></script>
+
+  <style>
+    html,
+    body,
+    #mapDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #header {
+      padding-left: 10px;
+      background-color: var(--calcite-ui-brand);
+      border-bottom: solid 1px var(--calcite-ui-brand-press);
+      color: var(--calcite-ui-foreground-3);
+    }
+
+    #footer {
+      padding: 10px 5px 10px 5px;
+      background-color: var(--calcite-ui-background);
+      border-top: solid 1px var(--calcite-ui-border-1);
+
+    }
+
+
+    /*Remove the black bar from the map*/
+    .mapDiv .esri-view-surface:focus::after {
+      outline: auto 0px !important;
+    }
+
+
+    .esri-logo {
+      margin: 0.375 rem;
+      content: "";
+      display: inline-block;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-color: transparent;
+      min-height: 30px;
+      min-width: 70px;
+      line-height: 0;
+      background-size: 100% 100%;
+      background-image: url(../images/esri-logo.svg);
+    }
+
+    /*on a black theme change the logo*/
+    .calcite-theme-dark .esri-logo {
+      background-image: url(../images/esri-logo-reversed.svg);
+    }
+
+    calcite-button {
+
+      height: 44px;
+      margin-bottom: 2px;
+    }
+
+    /*
+        * Hide the default Powered by Esri text
+        */
+    .esri-attribution__powered-by {
+      display: none;
+    }
+
+    /*
+        * Style the node.
+        */
+    .esri-powered-by__text {
+      display: none;
+    }
+
+    .esri-powered-by,
+    .esri-powered-by__image {
+      display: block;
+      width: 59px;
+      height: 35px;
+    }
+
+    .styled-table {
+      border-collapse: collapse;
+      margin: 25px 0;
+
+      min-width: 100%;
+      font-size:small;
+      font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      line-height: 1.3em;
+
+    }
+
+    .styled-table thead tr {
+      background-color: var(--calcite-ui-brand);
+      color: #ffffff;
+      text-align: left;
+    }
+
+    .styled-table th,
+    .styled-table td {
+      padding: 5px 3px;
+    }
+
+    .styled-table tbody tr {
+      border-bottom: 1px solid #dddddd;
+    }
+
+    .styled-table tbody tr:nth-of-type(even) {
+      background-color: #f3f3f3;
+    }
+
+    .styled-table tbody tr:last-of-type {
+      border-bottom: 2px solid var(--calcite-ui-brand);
+    }
+  </style>
+
+  <script>
+    require([
+      "esri/core/Collection",
+      "esri/geometry/Point",
+      "esri/geometry/SpatialReference",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer",
+      "esri/layers/MediaLayer",
+      "esri/layers/support/ControlPointsGeoreference",
+      "esri/layers/support/ImageElement",
+      "esri/Map",
+      "esri/symbols/SimpleLineSymbol",
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/Viewpoint",
+      "esri/views/MapView",
+      "esri/webmap/Bookmark",
+      "esri/widgets/Bookmarks",
+      "esri/widgets/Expand",
+      "esri/widgets/Sketch/SketchViewModel",
+      "esri/symbols/support/symbolUtils"
+    ], (
+      Collection,
+      Point,
+      SpatialReference,
+      Graphic,
+      GraphicsLayer,
+      MediaLayer,
+      ControlPointsGeoreference,
+      ImageElement,
+      Map,
+      SimpleLineSymbol,
+      SimpleMarkerSymbol,
+      Viewpoint,
+      MapView,
+      Bookmark,
+      Bookmarks,
+      Expand,
+      SketchViewModel,
+      symbolUtils
+    ) => {
+      // a function to create a Graphic from a point, color and index
+      const createGraphic = (point, color, index) =>
+        new Graphic({
+          geometry: point,
+          symbol: new SimpleMarkerSymbol({
+            style: "circle",
+            color,
+            size: 12,
+            outline: new SimpleLineSymbol({
+              color: "white",
+              width: 1.5
+            })
+          }),
+          attributes: { "index": index, "color": color }
+        });
+
+      const map = new Map({ basemap: "topo-vector" });
+      const zoom = 12;
+
+      const view = new MapView({
+        center: [6.095467841122555, 52.51156514296771],
+        container: "mapDiv",
+        map,
+        zoom
+      });
+
+      view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "top-right");
+
+      // use the SketchViewModel to allow updating the graphics and control points
+      const sketch = new SketchViewModel({
+        updateOnGraphicClick: true,
+        view
+      });
+
+      function setGraphicsInfo() {
+        sketch.layer.graphics.map((g) => {
+         console.log(g);
+          var color = g.attributes.color;
+          var span = document.getElementById(`symbol_${color}`);
+          span.innerHTML = '';
+          symbolUtils.renderPreviewHTML(g.symbol, {
+            node: span
+          });
+          document.getElementById(`x_${color}`).innerHTML = g.geometry.longitude;
+          document.getElementById(`y_${color}`).innerHTML = g.geometry.latitude;
+         }
+        )
+      }
+      const addSwollaMediaLayer = async () => {
+        // set view scale constraints
+        view.constraints.maxScale = 500;
+        view.constraints.minScale = 50000;
+
+        // four points representing known map coordinates on the MediaLayer's ImageElement
+        const swCornerMapPoint = new Point({
+          x: 6.092185798493758,
+          y: 52.519741197740906
+        });
+        const nwCornerMapPoint = new Point({
+          x: 6.104807243347032,
+          y: 52.515456173625395
+        });
+        const neCornerMapPoint = new Point({
+          x: 6.0957521057126085,
+          y: 52.50423207970906
+        });
+        const seCornerMapPoint = new Point({
+          x: 6.08085975646947,
+          y: 52.510174590276115
+        });
+
+        // create a GraphicsLayer to show the four points on the Map
+        const graphicsLayer = new GraphicsLayer({
+          graphics: [
+            createGraphic(swCornerMapPoint, "green", 0),
+            createGraphic(nwCornerMapPoint, "purple", 1),
+            createGraphic(neCornerMapPoint, "blue", 2),
+            createGraphic(seCornerMapPoint, "red", 3)
+          ]
+        });
+
+        // create an array of four control points composed of a sourcePoint, a point
+        // on the image element in pixels, and a mapPoint which is the location of the
+        // sourcePoint in map space
+        const swCornerControlPoint = {
+          sourcePoint: { x: 100, y: 1298 },
+          mapPoint: swCornerMapPoint
+        };
+
+        const nwCornerControlPoint = {
+          sourcePoint: { x: 100, y: 100 },
+          mapPoint: nwCornerMapPoint
+        };
+
+        const neCornerControlPoint = {
+          sourcePoint: { x: 1500, y: 100 },
+          mapPoint: neCornerMapPoint
+        };
+
+        const seCornerControlPoint = {
+          sourcePoint: { x: 1500, y: 1298 },
+          mapPoint: seCornerMapPoint
+        };
+
+        const controlPoints = [
+          swCornerControlPoint,
+          nwCornerControlPoint,
+          neCornerControlPoint,
+          seCornerControlPoint
+        ];
+
+        // georeference for the imageElement using the control points,
+        // image width, and image height
+        const controlPointsGeoreference = new ControlPointsGeoreference({
+          controlPoints,
+          width: 1600,
+          height: 1398
+        });
+
+        const imageElement = new ImageElement({
+          image:
+            "Swolla.jpg",
+          georeference: controlPointsGeoreference,
+          opacity: 0.75
+        });
+
+        const mediaLayer = new MediaLayer({
+          source: [imageElement],
+          title: "Swolla (Joan Blaeu)"
+        });
+
+        map.layers.addMany([mediaLayer, graphicsLayer]);
+
+        // use the SketchViewModel to allow updating the graphics and control points
+        sketch.layer = graphicsLayer;
+
+        sketch.on("update", (event) => {
+          if (event.toolEventInfo?.type === "move-start") {
+            imageElement.opacity = 0.3;
+          }
+          if (event.toolEventInfo?.type === "move-stop") {
+            imageElement.opacity = 0.9;
+            setGraphicsInfo();
+            AddAction("GeoRefPointChanged")
+          }
+
+          const points = graphicsLayer.graphics
+            .toArray()
+            .sort((a, b) => a.attributes.index - b.attributes.index)
+            .map((graphic) => graphic.geometry);
+
+          if (event.toolEventInfo?.type === "move-stop") {
+            points.map((p) => { console.log(p.longitude, p.latitude) })
+          }
+
+          controlPointsGeoreference.controlPoints = points.map(
+            (mapPoint, index) => ({
+              sourcePoint:
+                controlPointsGeoreference.controlPoints[index].sourcePoint,
+              mapPoint
+            })
+          );
+        });
+
+        var slider = document.getElementById("transparancy-slider")
+        slider.addEventListener("calciteSliderInput", () => {
+          //console.log("slider change:",slider.value);
+          imageElement.opacity = 1 - (slider.value * 0.01);
+        });
+        setGraphicsInfo();
+      };
+
+
+      addSwollaMediaLayer();
+
+    });
+  </script>
+</head>
+
+</html>
+
+<body>
+
+  <!-- shell will provide main app layout -->
+  <calcite-shell content-behind>
+    <!-- custom header for the shell -->
+    <div slot="header" id="header">
+      <h2 id="header-title">#CoolMaps - Client side GeoReferencing</h2>
+    </div>
+
+    <div id="mapDiv" class="mapdiv"></div>
+
+    <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel" style="width:350px;" heading="Info">
+      <div id="info-container" class="info-container" style="padding: 1rem;">
+        <div id="button-container">
+          
+          <calcite-label>Transparancy
+            <calcite-slider id="transparancy-slider" label-handles label-ticks max-label="100" max="100" min-label="0"
+              min="0" name="csdfsd" page-step="1" precise scale="l" snap value="24"></calcite-slider>
+          </calcite-label>
+          <div id="infoNumbers">
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th colspan="3">Point info</th>
+                </tr>
+              </thead>
+
+              <tr>
+                <td style="width: 25px;"><span id="symbol_green"></span></td>
+                <td><span id="x_green"></span></td>
+                <td><span id="y_green"></span></td>
+              </tr>
+              <tr>
+                <td><span id="symbol_purple"></td>
+                <td><span id="x_purple"></span></td>
+                <td><span id="y_purple"></span></td>
+              </tr>
+              <tr>
+                <td><span id="symbol_blue"></td>
+                <td><span id="x_blue"></span></td>
+                <td><span id="y_blue"></span></td>
+              </tr>
+              <tr>
+                <td><span id="symbol_red"></td>
+                <td><span id="x_red"></span></td>
+                <td><span id="y_red"></span></td>
+              </tr>
+
+            </table>
+
+
+          </div>
+          Click <a href="Swolla.jpg" target="_blank">here</a> for the original image.
+        </div>
+      </div>
+    </calcite-panel>
+
+    <!-- custom footer for the shell -->
+    <div slot="footer" id="footer">
+      <div class="esri-logo"></div>
+    </div>
+  </calcite-shell>
+  <!-- This node will be retrieved and added to the view. -->
+  <div class="esri-powered-by-widget" id="esri-powered-by-widget">
+    <a class="esri-powered-by" href="http://esri.com" target="_blank" title="Powered 
+   by Esri." aria-label="Powered by Esri. Visit to esri.com in a new window.">
+      <span class="esri-powered-by__text">Powered by Esri</span>
+      <img class="esri-powered-by__image" src="../images/powered_by_esri_logo.svg" alt="Esri L
+   ogo" aria-label="Esri logo">
+    </a>
+  </div>
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
