@@ -4,7 +4,7 @@
 This sample shows how to georeference an image n a browser.
 
 View this example live:
-[here](https://esrinederland.github.io/CoolMaps/MediaLayer/GoeRef.html?ref=readme)
+[here](https://esrinederland.github.io/CoolMaps/MediaLayer/GeoRef.html?ref=readme)
 
 
 ![GeoRef](../images/20221209_GeoRef.gif)
