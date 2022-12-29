@@ -1,0 +1,301 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Clock</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.83/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/dark/main.css">
+    <script src="https://js.arcgis.com/4.25/"></script>
+
+    <style>
+        html,
+        body,
+        .mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 16%;
+        }
+
+        .seperatordiv {
+            width: 2%;
+            text-align: center;
+
+            margin-top: auto;
+            margin-bottom: auto;
+            color: #f9db9d;
+            font-size: xxx-large;
+
+        }
+
+        #header {
+            padding-left: 10px;
+            background-image: url(gold-light-firework.jpg);
+            background-color: var(--calcite-ui-brand);
+            border-bottom: solid 1px #343535;
+            color: #f9db9d;
+            ;
+        }
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        #mapsContainer {
+            height: 100%;
+            display: flex;
+        }
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        }
+
+        /*
+        * Hide the default Powered by Esri text
+        */
+        .esri-attribution__powered-by {
+            display: none;
+        }
+
+        /*
+        * Style the node.
+        */
+        .esri-powered-by__text {
+            display: none;
+        }
+
+        .esri-powered-by,
+        .esri-powered-by__image {
+            display: block;
+            width: 59px;
+            height: 35px;
+        }
+    </style>
+
+    <script>
+        require(["esri/WebMap", "esri/views/MapView", "esri/widgets/Legend", "esri/widgets/Expand", "esri/Graphic"
+            , "esri/layers/GraphicsLayer"],
+            (WebMap, MapView, Legend, Expand, Graphic,
+                GraphicsLayer) => {
+
+                var features = [];
+
+                const viewh1 = new MapView({
+                    container: "mapDiv_h1", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                viewh1.ui.remove("zoom");
+                const viewh2 = new MapView({
+                    container: "mapDiv_h2", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                viewh2.ui.remove("zoom");
+                const viewm1 = new MapView({
+                    container: "mapDiv_m1", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                viewm1.ui.remove("zoom");
+                const viewm2 = new MapView({
+                    container: "mapDiv_m2", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                viewm2.ui.remove("zoom");
+                const views1 = new MapView({
+                    container: "mapDiv_s1", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                views1.ui.remove("zoom");
+                const views2 = new MapView({
+                    container: "mapDiv_s2", // Reference to the view div created in step 5
+                    map: new WebMap({ portalItem: { id: "8deff5d0e31647b3abf15211417222b3" } })
+                });
+                views2.ui.remove("zoom");
+
+                var powered_by = document.getElementById('esri-powered-by-widget');
+                views2.ui.add(powered_by, 'bottom-right');
+
+                views2.when(async () => {
+                    var numberLayer = viewh1.map.allLayers.find((x) => x.title == "Numbers");
+                    console.log("numberlayer:", numberLayer);
+                    var qresults = await numberLayer.queryFeatures();
+                    console.log(qresults);
+                    features = qresults.features;
+
+                    setInterval(() => {
+                        updateTime();
+                    }, 250)
+
+                    updateTime();
+                    var now = new Date();
+                    if(now.getMonth() == 0 || now.getMonth()==1 || now.getMonth()==11)
+                    {
+                        startSnowing();
+                    }
+                });
+
+                var currentNumbers = {}
+                currentNumbers['h1'] = { view: viewh1, currentNumber: -1 };
+                currentNumbers['h2'] = { view: viewh2, currentNumber: -1 };
+                currentNumbers['m1'] = { view: viewm1, currentNumber: -1 };
+                currentNumbers['m2'] = { view: viewm2, currentNumber: -1 };
+                currentNumbers['s1'] = { view: views1, currentNumber: -1 };
+                currentNumbers['s2'] = { view: views2, currentNumber: -1 };
+
+                function updateTime() {
+                    var now = new Date();
+                    
+                    //console.log(now);
+                    var hours = padTo2Digits(now.getHours());
+                    var minutes = padTo2Digits(now.getMinutes());
+                    var seconds = padTo2Digits(now.getSeconds());
+
+                    var startOfNewYear = new Date(now.getFullYear()+1,0,1);
+                    
+                    var nrofSecondsToNewYear = Math.floor((startOfNewYear - (now))/1000);
+                    //console.log('nrofSecondsToNewYear',nrofSecondsToNewYear)
+                    if(nrofSecondsToNewYear > 0 && nrofSecondsToNewYear < 8640000) //8,640,000 seconds == 100 hours
+                    {
+                        seconds = nrofSecondsToNewYear;
+                        minutes = Math.floor(seconds/60);
+                        hours = Math.floor(minutes/60);
+                        days = Math.floor(hours/24);
+                        
+                        hours = hours-(days*24);
+                        minutes = minutes-(days*24*60)-(hours*60);
+                        seconds = seconds-(days*24*60*60)-(hours*60*60)-(minutes*60);
+
+                        hours = padTo2Digits(hours + (days*24));
+                        minutes = padTo2Digits(minutes);
+                        seconds = padTo2Digits(seconds);
+                        console.log(`${days}d - HH${hours}: MM${minutes}: SS${seconds}`);
+                        document.getElementById('header-title').innerHTML = '#CoolMaps - CountDown Clock';
+                    }
+
+                    var newNumbers = {}
+                    newNumbers['h1'] = parseInt(hours.substring(0, 1))
+                    newNumbers['h2'] = parseInt(hours.substring(1, 2))
+                    newNumbers['m1'] = parseInt(minutes.substring(0, 1))
+                    newNumbers['m2'] = parseInt(minutes.substring(1, 2))
+                    newNumbers['s1'] = parseInt(seconds.substring(0, 1))
+                    newNumbers['s2'] = parseInt(seconds.substring(1, 2))
+
+                    for (var pos in currentNumbers) {
+                        var newnumber = newNumbers[pos]
+                        if (newnumber != currentNumbers[pos].currentNumber) {
+
+                            currentNumbers[pos].currentNumber = newnumber;
+                            if (!currentNumbers[pos].glayer) {
+                                var numberLayer = currentNumbers[pos].view.map.allLayers.find((x) => x.title == "Numbers");
+                                var gl = new GraphicsLayer();
+                                currentNumbers[pos].glayer = gl;
+                                currentNumbers[pos].view.map.add(gl);
+                                gl.effect = numberLayer.effect;
+                            }
+
+                            var numtype = null
+                            if (pos == 's2') {
+                                numtype = 'seconds'
+                            }
+                            var numfeatures = features.filter((x) => x.attributes.OutputNumber == newnumber && x.attributes.NumberType == numtype);
+                            var newFeature = numfeatures[Math.floor(Math.random() * numfeatures.length)];
+
+                            // console.log(`updating ${pos} to: ${newnumber} with:`, newFeature);
+                            var curView = currentNumbers[pos].view;
+
+                            var newGraphic = new Graphic({
+                                geometry: newFeature.geometry, symbol: {
+                                    type: "simple-line",  // autocasts as SimpleLineSymbol()
+                                    color: [173, 152, 109],
+                                    width: 4
+                                }
+                            });
+                            currentNumbers[pos].glayer.removeAll();
+                            currentNumbers[pos].glayer.add(newGraphic);
+                            //curView.goTo(newFeature.geometry);
+                            curView.goTo({ target: newFeature.geometry, rotation: newFeature.attributes.Angle });
+
+                        }
+                    }
+
+
+                }
+                function padTo2Digits(num) {
+                    return num.toString().padStart(2, '0');
+                }
+
+            });
+    </script>
+</head>
+
+</html>
+
+<body class="calcite-theme-dark sky">
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Clock</h2>
+        </div>
+        <div id="mapsContainer">
+            <div id="mapDiv_h1" class="mapdiv"></div>
+            <div id="mapDiv_h2" class="mapdiv"></div>
+            <div class="seperatordiv">:</div>
+            <div id="mapDiv_m1" class="mapdiv"></div>
+            <div id="mapDiv_m2" class="mapdiv"></div>
+            <div class="seperatordiv">:</div>
+            <div id="mapDiv_s1" class="mapdiv"></div>
+            <div id="mapDiv_s2" class="mapdiv"></div>
+        </div>
+
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+    <!-- This node will be retrieved and added to the view. -->
+    <div class="esri-powered-by-widget" id="esri-powered-by-widget">
+        <a class="esri-powered-by" href="http://esri.com" target="_blank" title="Powered by Esri." aria-label="Powered by Esri. Visit to esri.com in a new window.">
+            <span class="esri-powered-by__text">Powered by Esri</span>
+            <img class="esri-powered-by__image" src="../images/powered_by_esri_logo_dark.svg" alt="Esri Logo" aria-label="Esri logo">
+        </a>
+    </div>
+</body>
+<script src="snow_script.js"></script>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
