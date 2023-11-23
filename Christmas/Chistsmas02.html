@@ -1,0 +1,357 @@
+<head>
+    <meta charset="utf-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <title>#CoolMaps - Christmas Card 02</title>
+
+    <script type="module" src="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.esm.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.0.0-beta.97/calcite.css" />
+    <link rel="stylesheet" href="https://js.arcgis.com/4.25/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.25/"></script>
+    <script src="symbol.js"></script>
+
+    <style>
+        html,
+        body,
+        #mapDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #header {
+            padding-left: 10px;
+            background-image: url(christmas_background.png);
+            border-bottom: solid 3px #FFFFFF;
+            color: var(--calcite-ui-foreground-3);
+            text-shadow: 1px 1px 10px #fff, 1px 1px 10px #ccc;
+        }
+
+
+        #footer {
+            padding: 10px 5px 10px 5px;
+            background-color: var(--calcite-ui-background);
+            border-top: solid 1px var(--calcite-ui-border-1);
+
+        }
+
+
+        /*Remove the black bar from the map*/
+        .mapDiv .esri-view-surface:focus::after {
+            outline: auto 0px !important;
+        }
+
+
+        .esri-logo {
+            margin: 0.375 rem;
+            content: "";
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            min-height: 30px;
+            min-width: 70px;
+            line-height: 0;
+            background-size: 100% 100%;
+            background-image: url(../images/esri-logo.svg);
+        }
+
+        /*on a black theme change the logo*/
+        .calcite-theme-dark .esri-logo {
+            background-image: url(../images/esri-logo-reversed.svg);
+        }
+
+        calcite-button {
+
+            height: 44px;
+            margin-bottom: 2px;
+        }
+
+        /*
+        * Hide the default Powered by Esri text
+        */
+        .esri-attribution__powered-by {
+            display: none;
+        }
+
+        /*
+        * Style the node.
+        */
+        .esri-powered-by__text {
+            display: none;
+        }
+
+        .esri-powered-by,
+        .esri-powered-by__image {
+            display: block;
+            width: 59px;
+            height: 35px;
+        }
+    </style>
+
+    <script>
+        require(["esri/WebMap", "esri/views/MapView", "esri/Graphic", "esri/widgets/Expand", "esri/layers/FeatureLayer", "esri/widgets/Search"], (WebMap, MapView, Graphic, Expand, FeatureLayer, Search) => {
+            const map = new WebMap({
+                portalItem: { id: "0c3db000f2fa48f5b86587fe7142ae62" }
+            });
+
+            var addingTree = false;
+
+
+
+            const view = new MapView({
+                container: "mapDiv", // Reference to the view div created in step 5
+                map: map, // Reference to the map object created before the view
+                zoom: 8, // Sets zoom level based on level of detail (LOD)
+                center: [6.1, 52.5] // Sets center point of view using longitude,latitude
+            });
+            var powered_by = document.getElementById('esri-powered-by-widget');
+            view.ui.add(powered_by, 'bottom-right');
+
+            const searchWidget = new Search({
+                view: view
+            });
+            view.ui.add(new Expand({ content:searchWidget}),"top-right");
+
+            view.ui.add(new Expand({ content: document.getElementById("info-panel"), expanded: true }), "bottom-left");
+
+            var startbtn = document.getElementById("start-btn");
+            var cancelbtn = document.getElementById("cancel-btn");
+            var nametxt = document.getElementById("name-txt");
+
+            startbtn.addEventListener("click", () => {
+                if (addingTree) {
+                    //saving tree
+                    if (view.graphics.length != 1) {
+                        showMessage("Click on the map first!", "red")
+                        return;
+                    }
+                    if (nametxt.value.length < 2) {
+                        nametxt.status = "invalid";
+                        showMessage("Add a name before saving!", "red")
+                        return;
+                    }
+                    //save tree
+
+                    var newGraphic = new Graphic({
+                        geometry: view.graphics.items[0].geometry,
+                        attributes: {
+                            description: nametxt.value,
+                            pointtype: "2022_Tree"
+                        }
+                    });
+                    var addLayer = new FeatureLayer({ url: "https://services.arcgis.com/emS4w7iyWEQiulAb/arcgis/rest/services/ChristmasTree_public_add/FeatureServer/0" });
+                    addLayer.applyEdits({ addFeatures: [newGraphic] }).then((results) => {
+                        console.log(results);
+                        if (results.addFeatureResults.length > 0) {
+                            var addresult = results.addFeatureResults[0];
+                            if (addresult.error) {
+                                showMessage("Error saving tree!", "red");
+                                return;
+                            }
+                            AddAction("Added2022Tree", addresult.objectId);
+                            var oid = addresult.objectId;
+
+
+                            showMessage(`Tree saved! (oid: ${oid})`, "green");
+                            var treeLayer = map.layers.find((x) => x.title == "TreeLayer");
+                            newGraphic.attributes.OBJECTID = addresult.objectId;
+                            newGraphic.attributes.color = "red";
+                            newGraphic.attributes.topcolor = "green";
+                            treeLayer.applyEdits({ addFeatures: [newGraphic] })
+                            var treeLayer2 = map.layers.find((x) => x.title == "Tree");
+                            treeLayer2.refresh();
+
+                            StopAdding();
+                        }
+                        else {
+                            showMessage("Error saving Tree!", "red");
+                        }
+
+                    });
+                    StopAdding();
+                }
+                else {
+                    startbtn.innerHTML = "Save Tree";
+                    addingTree = true;
+                    cancelbtn.disabled = false;
+                }
+
+            });
+
+            document.getElementById("cancel-btn").addEventListener("click", () => {
+                StopAdding();
+            });
+            function StopAdding() {
+                view.graphics.removeAll();
+                startbtn.innerHTML = "Add Tree";
+                nametxt.value = "";
+                addingTree = false;
+                cancelbtn.disabled = true;
+                document.getElementById("alert").active = false;
+            }
+            var tempTreeSymbol = JSON.parse(JSON.stringify(cimPointkerstboomSymbol).replace('$feature.topcolor;', `'orange'`));
+            view.on("click", (evt) => {
+                if (addingTree) {
+                    view.graphics.removeAll();
+                    var tempTree = new Graphic({
+                        geometry: evt.mapPoint,
+                        symbol: tempTreeSymbol
+                    });
+                    view.graphics.add(tempTree);
+                }
+            });
+            view.when(() => {
+                var treeLayer = map.layers.find((x) => x.title == "Trees");
+                view.whenLayerView(treeLayer).then(() => {
+                    generateTrees(treeLayer);
+                });
+            });
+
+            function generateTrees(flayer) {
+                getAllDataFromFeatureLayer(flayer, view.spatialReference.wkid).then((result) => {
+                    console.log("got result", result);
+                    const treeRenderer = {
+                        type: "simple",
+                        symbol: cimPointkerstboomSymbol,
+                    };
+                    var fieldsList = flayer.fields;
+                    fieldsList.push({ name: "color", type: "string" });
+                    fieldsList.push({ name: "topcolor", type: "string" });
+
+                    var newGraphics = result.map((g) => {
+
+                        g.attributes.color = "red";
+                        g.attributes.topcolor = "yellow";
+                        // console.log("graphic", g);
+                        return g;
+                    });
+
+                    const newTreeLayer = new FeatureLayer({
+                        source: newGraphics,
+                        objectIdField: flayer.objectIdField,
+                        fields: fieldsList,
+                        renderer: treeRenderer,
+                        title: "TreeLayer"
+                    });
+
+                    view.map.layers.add(newTreeLayer);
+                    const colorsTopTree = [
+                        "red",
+                        "blue",
+                        "orange",
+                        "white",
+                        "orangered",
+                        "violet",
+                        "lime",
+                        "darkslateblue",
+                        "sandybrown",
+                        "maroon",
+                        "snow",
+                        "black",
+                    ];
+                    function draw() {
+                        setTimeout(function () {
+                            requestAnimationFrame(draw);
+                            newGraphics.forEach((g) => {
+                                var colorIndex = Math.floor(
+                                    Math.random() * (colorsTopTree.length - 1)
+                                );
+                                g.attributes.topcolor = colorsTopTree[colorIndex];
+                            });
+                            newTreeLayer.applyEdits({
+                                updateFeatures: newGraphics,
+                            });
+                        }, 1000);
+                    }
+                    requestAnimationFrame(draw);
+                });
+            }
+            function getAllDataFromFeatureLayer(fLayer, outSrWkid) {
+                return new Promise(resolve => {
+                    // First, get the count of all features...
+                    fLayer.queryFeatureCount({ where: fLayer.definitionExpression }).then((resultCount) => {
+                        features = []
+                        //loaderStatus(true, `featurecount ${resultCount}`);
+                        nrOfRequests = Math.ceil(resultCount / 1000)
+                        for (i = 0; i < nrOfRequests; i++) {
+                            j = 0
+
+                            var query = { where: fLayer.definitionExpression, num: 1000, start: i * 1000, returnGeometry: true, outSpatialReference: { wkid: outSrWkid }, outFields: "*" }
+                            fLayer.queryFeatures(query).then((resultFeatures) => {
+
+                                features = features.concat(resultFeatures.features)
+                                //loaderStatus(true, `got features ${features.length} from ${resultCount}`)
+                                j = j + 1
+                                if (j === nrOfRequests) {
+                                    var newgraphics = features.map(f => new Graphic({ attributes: f.attributes, geometry: f.geometry }));
+                                    resolve(newgraphics);
+                                }
+                            });
+                        }
+                    })
+
+                })
+            };
+            function showMessage(msg, color) {
+                document.getElementById("alert").active = false;
+                document.getElementById("alert-message").innerHTML = msg;
+                document.getElementById("alert-title").innerHTML = "Error";
+                if (color == "green") {
+                    document.getElementById("alert-title").innerHTML = "Success!";
+                }
+                document.getElementById("alert").color = color;
+                document.getElementById("alert").active = true;
+                AddAction("TreeMessage", msg);
+            }
+        });
+    </script>
+</head>
+
+</html>
+
+<body>
+
+    <!-- shell will provide main app layout -->
+    <calcite-shell content-behind>
+        <!-- custom header for the shell -->
+        <div slot="header" id="header">
+            <h2 id="header-title">#CoolMaps - Christmas Card 02</h2>
+        </div>
+
+        <div id="mapDiv" class="mapdiv"></div>
+
+        <calcite-panel height-scale="l" width-scale="m" data-panel-id="info" id="info-panel" heading="Add Tree">
+
+            <div id="info-container" class="info-container" style="padding: 8px;">
+                <calcite-alert id="alert" auto-dismiss placement="top">
+                    <div slot="title" id="alert-title">Can't save</div>
+                    <div slot="message" id="alert-message">Name is required!</div>
+                </calcite-alert>
+                <calcite-input id="name-txt" placeholder="Your name"></calcite-input>
+            </div>
+            <calcite-button id="start-btn" width="half" slot="footer-actions">Add Tree</calcite-button>
+            <calcite-button id="cancel-btn" width="half" slot="footer-actions" color="red" disabled="true">Cancel
+            </calcite-button>
+            </div>
+        </calcite-panel>
+
+        <!-- custom footer for the shell -->
+        <div slot="footer" id="footer">
+            <div class="esri-logo"></div>
+        </div>
+    </calcite-shell>
+    <!-- This node will be retrieved and added to the view. -->
+    <div class="esri-powered-by-widget" id="esri-powered-by-widget">
+        <a class="esri-powered-by" href="http://esri.com" target="_blank" title="Powered 
+   by Esri." aria-label="Powered by Esri. Visit to esri.com in a new window.">
+            <span class="esri-powered-by__text">Powered by Esri</span>
+            <img class="esri-powered-by__image" src="../images/powered_by_esri_logo.svg" alt="Esri L
+   ogo" aria-label="Esri logo">
+        </a>
+    </div>
+</body>
+<script src="https://esrinederland.github.io/CoolMonitor/CoolMonitor.js"></script>
+
+</html>
